@@ -1,0 +1,23 @@
+agent:
+  name: "ASA Connect+"
+  version: "asa-rag-v1.0.0"
+  role: "Agente para o Estudante"
+  institution: "FECAP - Área do Sucesso Alvarista"
+
+rag:
+  # Limiar de confiança mínimo (similaridade de cosseno) para aceitar resposta sem abstenção (RF04)
+  confidence_threshold: 0.60
+  max_chunks_retrieved: 3
+  min_chunk_length: 50
+  max_chunk_length: 600
+  vectorizer: "tfidf-dense-ngram"
+  
+abstention:
+  message: "Não encontrei uma informação oficial e confiável sobre este tópico na base institucional. Para evitar passar uma orientação incorreta sobre prazos ou procedimentos, prefiro te conectar diretamente com um atendente humano do ASA."
+  highlight_escalation: true
+
+rules:
+  never_hallucinate: true
+  always_cite_source: true
+  never_apply_penalties: true
+  allow_human_escalation: true

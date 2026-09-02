@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASA Connect+ — Área do Sucesso Alvarista (FECAP)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-green: #00664F;
+      --primary-dark: #004D3C;
+      --primary-light: #008769;
+      --accent-emerald: #10B981;
+      --accent-mint: #D1FAE5;
+      --font-scale: 1.0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0F172A;
+      font-size: calc(14px * var(--font-scale));
+    }
+    .app-screen {
+      display: none;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .app-screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+    /* Mobile frame container */
+    .mobile-frame {
+      width: 100%;
+      max-width: 414px;
+      height: 860px;
+      background-color: #F8FAFC;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 12px #1E293B;
+      overflow: hidden;
+      position: relative;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .font-scaled-text {
+      font-size: calc(1rem * var(--font-scale));
+    }
+    .font-scaled-sm {
+      font-size: calc(0.875rem * var(--font-scale));
+    }
+    .font-scaled-xs {
+      font-size: calc(0.75rem * var(--font-scale));
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Phone Mockup Frame -->
+  <div class="mobile-frame flex flex-col justify-between">
+
+    <!-- Top Status Bar Mockup -->
+    <div class="h-6 bg-[#004D3C] text-white flex items-center justify-between px-6 text-[10px] font-semibold select-none z-50">
+      <span>09:41</span>
+      <div class="w-20 h-4 bg-black/40 rounded-full mx-auto -mt-1"></div>
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-signal text-[9px]"></i>
+        <i class="fa-solid fa-wifi text-[9px]"></i>
+        <i class="fa-solid fa-battery-full text-[10px]"></i>
+      </div>
+    </div>
+
+    <!-- Screen Container (Router) -->
+    <div id="screen-container" class="flex-1 overflow-hidden relative flex flex-col">
+
+      <!-- 1. SPLASH SCREEN (Figma tela 1) -->
+      <div id="screen-splash" class="app-screen active bg-[#005944] text-white items-center justify-between p-8 text-center select-none">
+        <div class="flex-1"></div>
+        <div class="flex flex-col items-center">
+          <div class="flex items-center gap-1.5">
+            <span class="text-6xl font-black italic tracking-tighter text-white">asa</span>
+            <div class="flex gap-1">
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+              <span class="w-3 h-3 rounded-full bg-sky-400"></span>
+            </div>
+          </div>
+          <span class="text-[9px] font-bold tracking-widest text-emerald-200 mt-2">ÁREA DO SUCESSO ALVARISTA FECAP</span>
+        </div>
+        <div class="flex-1 flex flex-col justify-end w-full max-w-xs pb-4">
+          <div class="w-full bg-[#004D3C] h-1.5 rounded-full overflow-hidden mb-2">
+            <div class="bg-emerald-400 h-full w-full animate-pulse"></div>
+          </div>
+          <span class="text-[10px] font-bold tracking-widest text-emerald-200 uppercase">Iniciando Ambiente...</span>
+        </div>
+      </div>
+
+      <!-- 2. ESCOLHA DE PERFIL (Figma tela 2) -->
+      <div id="screen-profile-choice" class="app-screen bg-[#005944] text-white p-6 justify-between select-none">
+        <div class="text-center pt-2">
+          <span class="text-xs font-bold tracking-widest text-emerald-200 uppercase">Escolha seu Perfil</span>
+        </div>
+
+        <div class="flex flex-col items-center justify-center my-auto text-center px-4">
+          <div id="profile-avatar-container" class="w-44 h-44 rounded-full border-4 border-emerald-400 bg-[#004D3C] flex items-center justify-center shadow-2xl mb-8 relative">
+            <i id="profile-icon" class="fa-solid fa-graduation-cap text-6xl text-white"></i>
+          </div>
+          <h2 id="profile-title" class="text-2xl font-black tracking-wider text-white mb-2">ALUNO</h2>
+          <p id="profile-desc" class="text-xs font-semibold text-emerald-100/80 leading-relaxed px-4 max-w-xs">
+            ENCONTRE RESPOSTAS, SERVIÇOS E ORIENTAÇÕES ACADÊMICAS.
+          </p>
+        </div>
+
+        <div class="flex flex-col items-center gap-6 pb-2">
+          <!-- Dots Indicator -->
+          <div class="flex gap-2" id="profile-dots">
+            <span class="w-6 h-2 rounded-full bg-emerald-400 transition-all"></span>
+            <span class="w-2 h-2 rounded-full bg-white/30 transition-all"></span>
+            <span class="w-2 h-2 rounded-full bg-white/30 transition-all"></span>
+            <span class="w-2 h-2 rounded-full bg-white/30 transition-all"></span>
+          </div>
+          <button id="btn-profile-continue" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition">
+            <span>CONTINUAR</span>
+            <i class="fa-solid fa-arrow-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. LOGIN SCREEN (Figma tela 3) -->
+      <div id="screen-login" class="app-screen bg-[#005944] p-5 justify-between select-none">
+        <div class="flex flex-col items-center pt-2">
+          <div class="flex items-center gap-1">
+            <span class="text-4xl font-black italic tracking-tighter text-white">asa</span>
+            <div class="flex gap-1">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+              <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- White Card -->
+        <div class="bg-white rounded-3xl p-6 shadow-2xl my-auto">
+          <h3 class="text-center font-bold text-slate-800 text-sm mb-4">Acesso Institucional</h3>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">RA / Matrícula</label>
+              <div class="relative">
+                <i class="fa-regular fa-id-badge absolute left-3 top-3 text-emerald-700 text-sm"></i>
+                <input id="login-identifier" type="text" value="123456" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600" placeholder="Digite seu RA">
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Senha</label>
+                <button id="btn-to-recovery" class="text-[10px] font-bold text-emerald-700 hover:underline">Esqueci minha senha</button>
+              </div>
+              <div class="relative">
+                <i class="fa-solid fa-lock absolute left-3 top-3 text-emerald-700 text-sm"></i>
+                <input id="login-password" type="password" value="senha123" class="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600" placeholder="••••••••">
+                <button id="btn-toggle-pwd" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  <i class="fa-regular fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <button id="btn-do-login" class="w-full py-3 bg-[#00664F] hover:bg-[#004D3C] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow transition mt-2">
+              <span>Entrar</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+
+            <!-- Test Credentials Shortcuts for Grading -->
+            <div class="pt-3 border-t border-slate-100">
+              <span class="block text-[9px] font-bold text-slate-400 text-center uppercase tracking-wider mb-2">Contas de Teste Rápidas:</span>
+              <div class="flex justify-center gap-1.5 flex-wrap">
+                <button class="btn-fast-login px-2 py-1 bg-slate-100 hover:bg-emerald-50 text-[9px] font-bold text-slate-700 rounded-lg border border-slate-200" data-id="123456" data-pwd="senha123">Aluno: 123456</button>
+                <button class="btn-fast-login px-2 py-1 bg-slate-100 hover:bg-emerald-50 text-[9px] font-bold text-slate-700 rounded-lg border border-slate-200" data-id="atendente@fecap.br" data-pwd="senha123">Atendente ASA</button>
+                <button class="btn-fast-login px-2 py-1 bg-slate-100 hover:bg-emerald-50 text-[9px] font-bold text-slate-700 rounded-lg border border-slate-200" data-id="admin@fecap.br" data-pwd="senha123">Admin</button>
+              </div>
+            </div>
+
+            <div class="text-center pt-1">
+              <button class="text-[10px] text-slate-400 hover:text-slate-600">Problemas com o acesso? Fale com o Suporte</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center pb-2">
+          <span class="text-[8px] font-bold tracking-widest text-emerald-200/60 uppercase">Área do Sucesso Alvarista FECAP</span>
+        </div>
+      </div>
+
+      <!-- 4. RECUPERAÇÃO DE SENHA (Figma tela 4) -->
+      <div id="screen-recovery" class="app-screen bg-[#005944] p-5 justify-between select-none">
+        <div class="flex items-center">
+          <button id="btn-recovery-back" class="text-white p-2 hover:bg-white/10 rounded-full">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+          </button>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 shadow-2xl my-auto text-center">
+          <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 text-lg">
+            <i class="fa-regular fa-envelope"></i>
+          </div>
+          <h3 class="font-bold text-slate-800 text-sm mb-2">Recuperação de Acesso</h3>
+          <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+            Insira seu RA ou e-mail institucional cadastrado para receber as instruções de recuperação.
+          </p>
+
+          <div class="text-left mb-4">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">RA / E-mail</label>
+            <input id="recovery-input" type="text" value="aluno@fecap.br" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600" placeholder="123456 ou seu.nome@fecap.br">
+          </div>
+
+          <div id="recovery-msg-box" class="hidden p-2.5 bg-emerald-50 text-emerald-800 rounded-xl text-[11px] font-medium mb-3"></div>
+
+          <button id="btn-do-recover" class="w-full py-3 bg-[#00664F] hover:bg-[#004D3C] text-white font-bold rounded-xl text-xs shadow transition">
+            Enviar Link
+          </button>
+        </div>
+
+        <div class="text-center pb-2">
+          <span class="text-[8px] font-bold tracking-widest text-emerald-200/60 uppercase">Área do Sucesso Alvarista FECAP</span>
+        </div>
+      </div>
+
+      <!-- 5. HOME SCREEN (Figma tela 5) -->
+      <div id="screen-home" class="app-screen bg-[#F8FAFC]">
+        <!-- Green Header -->
+        <div class="bg-[#00664F] text-white px-5 py-4 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-1.5">
+            <span class="text-2xl font-black italic tracking-tighter">asa</span>
+            <div class="flex gap-0.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+            </div>
+            <span class="text-[7px] font-bold tracking-widest text-emerald-200 ml-1">ÁREA DO SUCESSO ALVARISTA</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="btn-top-dashboard" class="hidden text-white bg-white/20 hover:bg-white/30 p-1.5 rounded-lg text-xs" title="Painel Gerencial">
+              <i class="fa-solid fa-chart-pie"></i>
+            </button>
+            <i class="fa-regular fa-bell text-sm text-white/80"></i>
+            <div id="home-user-avatar" class="w-7 h-7 rounded-full bg-emerald-400 flex items-center justify-center text-xs font-bold text-white border border-white/20">
+              L
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none pb-20">
+          <!-- Assistant Greeting Banner -->
+          <div class="bg-gradient-to-br from-[#00664F] to-[#004D3C] text-white rounded-2xl p-4 shadow-md">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-robot text-emerald-300"></i>
+              </div>
+              <div>
+                <h3 id="home-greeting" class="font-bold text-sm">Olá, Aluno!</h3>
+                <p class="text-[11px] text-emerald-100/90">Como posso ajudar você hoje?</p>
+              </div>
+            </div>
+
+            <!-- Fast Ask Box -->
+            <div class="bg-white rounded-xl flex items-center p-1 shadow-sm">
+              <input id="home-search-input" type="text" placeholder="Pergunte ao ASA Connect..." class="flex-1 px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none">
+              <button id="btn-home-send" class="w-7 h-7 rounded-lg bg-[#00664F] text-white flex items-center justify-center hover:bg-emerald-700 transition">
+                <i class="fa-solid fa-arrow-up text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Acesso Rápido (2x2 Grid) -->
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-2">Acesso Rápido</h4>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="btn-nav-docs bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm flex items-center gap-2.5 cursor-pointer hover:border-emerald-500 transition">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm">
+                  <i class="fa-regular fa-folder-open"></i>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-800 text-[11px]">Documentos</h5>
+                  <p class="text-[9px] text-slate-400">Histórico, Atestados</p>
+                </div>
+              </div>
+
+              <div class="btn-nav-services bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm flex items-center gap-2.5 cursor-pointer hover:border-emerald-500 transition">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm">
+                  <i class="fa-regular fa-file-lines"></i>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-800 text-[11px]">Requerimentos</h5>
+                  <p class="text-[9px] text-slate-400">Processos e Prazos</p>
+                </div>
+              </div>
+
+              <div class="btn-nav-services bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm flex items-center gap-2.5 cursor-pointer hover:border-emerald-500 transition">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-800 text-[11px]">Acadêmico</h5>
+                  <p class="text-[9px] text-slate-400">Matrícula, Diploma</p>
+                </div>
+              </div>
+
+              <div class="btn-ask-faq bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm flex items-center gap-2.5 cursor-pointer hover:border-emerald-500 transition" data-q="Como emitir a 2ª via do boleto de mensalidade?">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm">
+                  <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-800 text-[11px]">Financeiro</h5>
+                  <p class="text-[9px] text-slate-400">Boletos, Acordos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Perguntas Frequentes (FAQ) -->
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-2">Perguntas Frequentes</h4>
+            <div class="bg-white rounded-2xl border border-slate-200/80 divide-y divide-slate-100 shadow-sm overflow-hidden">
+              <div class="btn-ask-faq p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-q="Como solicitar um atestado de matrícula?">
+                <span class="font-medium">Como solicitar um atestado de matrícula?</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-ask-faq p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-q="Qual o prazo para entrega de horas complementares?">
+                <span class="font-medium">Qual o prazo para entrega de horas complementares?</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-ask-faq p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-q="Preciso da 2ª via do boleto deste mês.">
+                <span class="font-medium">Preciso da 2ª via do boleto deste mês.</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-ask-faq p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-q="Como funciona o trancamento de curso e quais os limites?">
+                <span class="font-medium">Como funciona o trancamento de matrícula?</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. CHAT SCREEN (Figma tela 11 - ASA Connect+) -->
+      <div id="screen-chat" class="app-screen bg-[#F8FAFC]">
+        <!-- Header -->
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button id="btn-chat-back" class="text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-emerald-400 flex items-center justify-center text-white text-xs">
+                <i class="fa-solid fa-headset"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-xs leading-none">ASA Connect +</h3>
+                <span class="text-[9px] text-emerald-200">Assistente Institucional Oficial</span>
+              </div>
+            </div>
+          </div>
+          <button id="btn-escalate-top" class="text-white bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-user-tie"></i>
+            <span>Falar com o ASA</span>
+          </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-messages-list" class="flex-1 overflow-y-auto p-4 space-y-3.5 scrollbar-none">
+          <!-- Welcome Bubble -->
+          <div class="flex gap-2 max-w-[90%]">
+            <div class="w-6 h-6 rounded-full bg-[#00664F] text-white flex items-center justify-center text-[10px] shrink-0">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 shadow-sm text-xs text-slate-700 leading-relaxed">
+              Olá! Sou o ASA Connect, seu assistente virtual oficial do sucesso do estudante. Como posso orientar você hoje?
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="p-3 bg-white border-t border-slate-200/80 flex items-center gap-2">
+          <button class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 flex items-center justify-center" title="Anexar documento">
+            <i class="fa-solid fa-paperclip text-sm"></i>
+          </button>
+          <div class="flex-1 bg-slate-100 rounded-full flex items-center px-3 py-1.5">
+            <input id="chat-input-text" type="text" placeholder="Digite sua mensagem..." class="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none">
+            <button class="text-slate-400 hover:text-slate-600 ml-1">
+              <i class="fa-solid fa-microphone text-xs"></i>
+            </button>
+          </div>
+          <button id="btn-send-chat" class="w-8 h-8 rounded-full bg-[#00664F] hover:bg-[#004D3C] text-white flex items-center justify-center shadow transition shrink-0">
+            <i class="fa-solid fa-arrow-up text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 7. DOCUMENTOS SCREEN (Figma tela 6) -->
+      <div id="screen-documents" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button class="btn-back-home text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 class="font-bold text-xs">Documentos</h3>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none pb-20">
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-2">Categorias</h4>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="btn-ask-faq bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer" data-q="Quais documentos acadêmicos posso solicitar?">
+                <i class="fa-regular fa-file-lines text-emerald-700 text-base"></i>
+                <div>
+                  <h5 class="font-bold text-[10px] text-slate-800">ACADÊMICOS</h5>
+                  <p class="text-[8px] text-slate-400">Histórico, Atestados</p>
+                </div>
+              </div>
+              <div class="btn-ask-faq bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer" data-q="Como obter informe de rendimentos e boletos?">
+                <i class="fa-regular fa-credit-card text-emerald-700 text-base"></i>
+                <div>
+                  <h5 class="font-bold text-[10px] text-slate-800">FINANCEIROS</h5>
+                  <p class="text-[8px] text-slate-400">Boletos, IR</p>
+                </div>
+              </div>
+              <div class="btn-ask-faq bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer" data-q="Como enviar o Termo de Compromisso de Estágio?">
+                <i class="fa-solid fa-briefcase text-emerald-700 text-base"></i>
+                <div>
+                  <h5 class="font-bold text-[10px] text-slate-800">ESTÁGIO</h5>
+                  <p class="text-[8px] text-slate-400">Contratos, Relatórios</p>
+                </div>
+              </div>
+              <div class="btn-ask-faq bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-2 cursor-pointer" data-q="Como solicitar formulários gerais?">
+                <i class="fa-regular fa-folder text-emerald-700 text-base"></i>
+                <div>
+                  <h5 class="font-bold text-[10px] text-slate-800">OUTROS</h5>
+                  <p class="text-[8px] text-slate-400">Formulários gerais</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload AI Card -->
+          <div class="bg-white rounded-2xl p-4 border border-dashed border-emerald-300 text-center shadow-sm">
+            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-2 text-sm">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h4 class="font-bold text-xs text-slate-800 mb-1">Selecione ou arraste um arquivo</h4>
+            <p class="text-[10px] text-slate-400 mb-3">PDF, DOCX ou JPG até 10MB para análise por IA</p>
+            <button id="btn-upload-file" class="px-4 py-2 bg-[#00664F] text-white rounded-xl text-[11px] font-bold shadow hover:bg-emerald-700 transition">
+              Escolher Arquivo
+            </button>
+            <div id="upload-status-msg" class="hidden mt-2 text-[10px] font-semibold text-emerald-700 bg-emerald-50 p-2 rounded-lg"></div>
+          </div>
+
+          <!-- Recents List -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <h4 class="font-bold text-slate-800 text-xs">Recentes</h4>
+              <span class="text-[10px] font-bold text-emerald-700 cursor-pointer">VER TODOS</span>
+            </div>
+            <div class="space-y-2">
+              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-file-pdf text-red-500 text-base"></i>
+                  <div>
+                    <h5 class="font-bold text-[11px] text-slate-800">Histórico_Escolar_2023.2.pdf</h5>
+                    <p class="text-[9px] text-slate-400">Acadêmico · Ontem, 14:20</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-download text-xs text-slate-400 cursor-pointer hover:text-emerald-700"></i>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-file-pdf text-red-500 text-base"></i>
+                  <div>
+                    <h5 class="font-bold text-[11px] text-slate-800">Atestado_Matricula_Atualizado.pdf</h5>
+                    <p class="text-[9px] text-slate-400">Acadêmico · 15 Out 2024</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-download text-xs text-slate-400 cursor-pointer hover:text-emerald-700"></i>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-file-pdf text-red-500 text-base"></i>
+                  <div>
+                    <h5 class="font-bold text-[11px] text-slate-800">Boleto_Mensalidade_Nov.pdf</h5>
+                    <p class="text-[9px] text-slate-400">Financeiro · 10 Out 2024</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-download text-xs text-slate-400 cursor-pointer hover:text-emerald-700"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. SERVIÇOS ACADÊMICOS (Figma tela 8) -->
+      <div id="screen-services" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button class="btn-back-home text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 class="font-bold text-xs">Serviços Acadêmicos</h3>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-none pb-20">
+          <p class="text-[11px] text-slate-500 mb-2">Selecione uma categoria abaixo para acessar os procedimentos do seu perfil:</p>
+
+          <!-- Matrícula -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-id-card text-emerald-700 text-xs"></i>
+              <h4 class="font-bold text-xs text-slate-800">Matrícula</h4>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Renovação de Matrícula" data-slug="rematricula_prazos_regras">
+                <span>Renovação de Matrícula</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Trancamento de Curso" data-slug="trancamento_disciplinas">
+                <span>Trancamento de Curso</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Inclusão / Exclusão de Disciplinas" data-slug="trancamento_disciplinas">
+                <span>Inclusão/Exclusão de Disciplinas</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Histórico -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-file-invoice text-emerald-700 text-xs"></i>
+              <h4 class="font-bold text-xs text-slate-800">Histórico & Documentos</h4>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Atestado de Matrícula" data-slug="atestado_matricula">
+                <div class="flex items-center gap-2">
+                  <span>Atestado de Matrícula</span>
+                  <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[8px] font-bold rounded">Oficial</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Histórico Escolar" data-slug="atestado_matricula">
+                <span>Emitir Histórico Escolar</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diploma -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-emerald-700 text-xs"></i>
+              <h4 class="font-bold text-xs text-slate-800">Diploma</h4>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Solicitação de Diploma Digital" data-slug="solicitacao_diploma">
+                <span>Solicitação de Diploma Digital</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-service-detail p-3 flex justify-between items-center text-xs text-slate-700 hover:bg-slate-50 cursor-pointer" data-title="Certificado de Conclusão" data-slug="solicitacao_diploma">
+                <span>Certificado de Conclusão</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. DETALHE DE PROCEDIMENTO (Figma tela 12) -->
+      <div id="screen-service-detail" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button id="btn-detail-back" class="text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 id="detail-header-title" class="font-bold text-xs">Atestado de Matrícula</h3>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none pb-24">
+          <!-- Badges -->
+          <div class="flex gap-2">
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-[9px] font-bold rounded flex items-center gap-1">
+              <i class="fa-regular fa-building text-[8px]"></i> Secretaria
+            </span>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded flex items-center gap-1">
+              <i class="fa-solid fa-circle-check text-[8px]"></i> Fonte Oficial
+            </span>
+          </div>
+
+          <div>
+            <h2 id="detail-main-title" class="text-lg font-bold text-slate-800">Atestado de Matrícula</h2>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+              Documento oficial que comprova o vínculo ativo do aluno com a instituição no semestre letivo vigente.
+            </p>
+          </div>
+
+          <!-- Sobre -->
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-1.5">Sobre</h4>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed shadow-sm">
+              O atestado de matrícula é gerado automaticamente pelo sistema acadêmico e possui autenticação digital (QR Code), dispensando assinatura manual e carimbo da secretaria para ter validade legal.
+            </div>
+          </div>
+
+          <!-- Como Solicitar -->
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-1.5">Como solicitar</h4>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5 shadow-sm text-xs">
+              <div class="flex gap-2.5 items-start">
+                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <strong class="text-slate-800 block text-[11px]">Acesso ao Portal</strong>
+                  <span class="text-slate-500 text-[10px]">Faça login no Portal do Aluno com seu RA e senha.</span>
+                </div>
+              </div>
+              <div class="flex gap-2.5 items-start">
+                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <strong class="text-slate-800 block text-[11px]">Navegação</strong>
+                  <span class="text-slate-500 text-[10px]">Acesse o menu "Secretaria" e depois "Emissão de Documentos".</span>
+                </div>
+              </div>
+              <div class="flex gap-2.5 items-start">
+                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0">3</span>
+                <div>
+                  <strong class="text-slate-800 block text-[11px]">Download</strong>
+                  <span class="text-slate-500 text-[10px]">Selecione "Atestado de Matrícula" e clique em "Gerar PDF".</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requisitos -->
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs mb-1.5">Requisitos</h4>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-sm text-[11px]">
+              <div class="flex items-center gap-2 text-slate-700">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                <span>Estar regularmente matriculado no semestre atual.</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-700">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                <span>Não possuir pendências de documentação básica no ato da matrícula.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Citation box -->
+          <div class="p-3 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-between text-[10px] text-slate-600">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-book-bookmark text-emerald-700"></i>
+              <span class="font-medium">Manual do Aluno 2024 · Capítulo 4 — Emissão de Documentos</span>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom Button -->
+        <div class="p-3 bg-white border-t border-slate-200">
+          <button id="btn-detail-ask" class="w-full py-3 bg-[#00664F] hover:bg-[#004D3C] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow">
+            <i class="fa-regular fa-comment-dots"></i>
+            <span>Perguntar ao ASA Connect</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 10. CONVERSAS (HISTÓRICO) SCREEN (Figma tela 10) -->
+      <div id="screen-conversations" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button class="btn-back-home text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 class="font-bold text-xs">Conversas Anteriores</h3>
+          </div>
+        </div>
+
+        <div class="p-4 flex-1 overflow-y-auto scrollbar-none pb-20">
+          <div class="bg-white rounded-xl flex items-center px-3 py-2 border border-slate-200 mb-3">
+            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
+            <input id="search-conv-input" type="text" placeholder="Buscar conversas..." class="w-full bg-transparent text-xs text-slate-800 focus:outline-none">
+          </div>
+
+          <div id="conversations-list-container" class="space-y-2">
+            <!-- Dynamic conversations rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. PERFIL SCREEN (Figma tela 7) -->
+      <div id="screen-profile" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button class="btn-back-home text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 class="font-bold text-xs">Perfil</h3>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none pb-20">
+          <!-- User Top Card -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 text-center shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-[#00664F] text-white font-bold text-xl flex items-center justify-center mx-auto mb-2 relative">
+              <span id="profile-card-initial">L</span>
+              <span class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white absolute bottom-0 right-0 flex items-center justify-center text-[8px]">
+                <i class="fa-solid fa-pen"></i>
+              </span>
+            </div>
+            <h3 id="profile-card-name" class="font-bold text-slate-800 text-sm">Nome do Aluno</h3>
+            <p id="profile-card-ra" class="text-[11px] text-slate-400 mb-1.5">RA: 123456</p>
+            <span id="profile-card-badge" class="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 font-bold text-[9px] rounded-full border border-emerald-200">ALUNO</span>
+          </div>
+
+          <!-- Section Conta -->
+          <div>
+            <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Conta</span>
+            <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+              <div id="btn-show-personal-data" class="p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-user text-emerald-700 text-sm"></i>
+                  <span>Dados Pessoais</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div class="btn-nav-docs p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-bookmark text-emerald-700 text-sm"></i>
+                  <span>Documentos Salvos</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Preferências -->
+          <div>
+            <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Preferências</span>
+            <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+              <div class="p-3 flex items-center justify-between text-xs text-slate-700">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-bell text-emerald-700 text-sm"></i>
+                  <span>Notificações</span>
+                </div>
+                <input type="checkbox" checked class="accent-emerald-700">
+              </div>
+              <div class="p-3 flex items-center justify-between text-xs text-slate-700">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-regular fa-moon text-emerald-700 text-sm"></i>
+                  <span>Aparência</span>
+                </div>
+                <span class="text-[10px] text-slate-400">Sistema ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Acessibilidade (Tamanho do Texto real!) -->
+          <div>
+            <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Acessibilidade</span>
+            <div class="bg-white rounded-2xl border border-slate-200 p-3.5 space-y-3 shadow-sm">
+              <div class="flex items-center justify-between text-xs text-slate-700">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-text-height text-emerald-700 text-sm"></i>
+                  <span>Tamanho do Texto (Fonte)</span>
+                </div>
+                <select id="font-scale-selector" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg p-1">
+                  <option value="0.85">Pequeno (85%)</option>
+                  <option value="1.0" selected>Normal (100%)</option>
+                  <option value="1.15">Médio (115%)</option>
+                  <option value="1.35">Grande (135%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Institucional -->
+          <div>
+            <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Institucional</span>
+            <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+              <div id="btn-show-about" class="p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-circle-info text-emerald-700 text-sm"></i>
+                  <span>Sobre o ASA Connect</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+              <div id="btn-show-lgpd" class="p-3 flex items-center justify-between text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-shield-halved text-emerald-700 text-sm"></i>
+                  <span>Privacidade e LGPD</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <button id="btn-do-logout" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs flex items-center justify-center gap-2 border border-red-200 shadow-sm transition">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>SAIR</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 12. DASHBOARD GERENCIAL ASA (RF08, RF09, RF11, RF16) -->
+      <div id="screen-dashboard" class="app-screen bg-[#F8FAFC]">
+        <div class="bg-[#00664F] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <button class="btn-back-home text-white hover:bg-white/10 p-1.5 rounded-full">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <h3 class="font-bold text-xs">Painel Gerencial ASA (RF11)</h3>
+          </div>
+          <button id="btn-refresh-dashboard" class="text-white hover:bg-white/10 p-1.5 rounded-full text-xs" title="Atualizar">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+
+        <!-- Dashboard Tabs -->
+        <div class="flex bg-white border-b border-slate-200 text-xs font-bold text-slate-500">
+          <button class="dash-tab-btn flex-1 py-2.5 border-b-2 border-emerald-600 text-emerald-700" data-tab="metrics">Métricas RAG</button>
+          <button class="dash-tab-btn flex-1 py-2.5 border-b-2 border-transparent hover:text-slate-700" data-tab="queue">Fila Humana</button>
+          <button class="dash-tab-btn flex-1 py-2.5 border-b-2 border-transparent hover:text-slate-700" data-tab="ragdocs">Fontes RAG</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none pb-20">
+          <!-- Tab 1: Metrics -->
+          <div id="dash-tab-metrics" class="space-y-4">
+            <!-- 4 KPIs Grid -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="block text-[9px] font-bold text-slate-400 uppercase">Conversas</span>
+                <span id="kpi-conversations" class="text-xl font-black text-slate-800">0</span>
+                <p id="kpi-messages" class="text-[8px] text-slate-400 mt-0.5">0 mensagens</p>
+              </div>
+              <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="block text-[9px] font-bold text-slate-400 uppercase">Taxa Abstenção</span>
+                <span id="kpi-abstention" class="text-xl font-black text-amber-600">0%</span>
+                <p class="text-[8px] text-emerald-600 mt-0.5">Limiar 0.60</p>
+              </div>
+              <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="block text-[9px] font-bold text-slate-400 uppercase">Satisfação (Útil)</span>
+                <span id="kpi-satisfaction" class="text-xl font-black text-emerald-600">100%</span>
+                <p id="kpi-feedbacks" class="text-[8px] text-slate-400 mt-0.5">0 avaliações</p>
+              </div>
+              <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="block text-[9px] font-bold text-slate-400 uppercase">Fila Humana</span>
+                <span id="kpi-escalations" class="text-xl font-black text-red-500">0</span>
+                <p id="kpi-resolved" class="text-[8px] text-slate-400 mt-0.5">0 resolvidos</p>
+              </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+              <h4 class="font-bold text-xs text-slate-800 mb-2">Distribuição de Conteúdo</h4>
+              <div id="dash-categories-container" class="space-y-2 text-xs">
+                <!-- dynamic -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Queue -->
+          <div id="dash-tab-queue" class="hidden space-y-3">
+            <h4 class="font-bold text-xs text-slate-800">Casos na Fila Humana (RF08, RF09)</h4>
+            <div id="dash-queue-container" class="space-y-2.5">
+              <!-- dynamic cases -->
+            </div>
+          </div>
+
+          <!-- Tab 3: RAG Docs -->
+          <div id="dash-tab-ragdocs" class="hidden space-y-3">
+            <h4 class="font-bold text-xs text-slate-800">Gestão de Fontes Institucionais (RF16)</h4>
+            <div id="dash-docs-container" class="space-y-2">
+              <!-- dynamic docs -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom App Navigation Bar (Always visible on main views) -->
+    <div id="bottom-nav-bar" class="hidden bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-between text-[10px] font-bold text-slate-400 z-40 select-none">
+      <button class="nav-item flex flex-col items-center gap-1 text-[#00664F]" data-target="screen-home">
+        <i class="fa-solid fa-house text-sm"></i>
+        <span>Início</span>
+      </button>
+      <button class="nav-item flex flex-col items-center gap-1 hover:text-slate-600" data-target="screen-conversations">
+        <i class="fa-regular fa-comment-dots text-sm"></i>
+        <span>Conversas</span>
+      </button>
+      <button class="nav-item flex flex-col items-center gap-1 hover:text-slate-600" data-target="screen-profile">
+        <i class="fa-regular fa-user text-sm"></i>
+        <span>Perfil</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Modal Dialog for Escalation -->
+  <div id="modal-escalation" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-left">
+      <div class="flex items-center gap-2.5 text-emerald-800 mb-2">
+        <i class="fa-solid fa-headset text-lg"></i>
+        <h3 class="font-bold text-sm">Falar com o ASA (Atendimento Humano)</h3>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">
+        Deseja transferir esta conversa para a fila de atendimento da Área do Sucesso Alvarista?
+      </p>
+      <textarea id="modal-escalate-notes" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none mb-3" rows="3" placeholder="Detalhes ou dúvida complementar (opcional)..."></textarea>
+      <div class="flex gap-2 justify-end">
+        <button id="btn-cancel-escalate" class="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl text-xs">Cancelar</button>
+        <button id="btn-confirm-escalate" class="px-4 py-2 bg-[#00664F] text-white font-bold rounded-xl text-xs shadow">Confirmar Transferência</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dialog for Attendant Resolution -->
+  <div id="modal-resolve-case" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-left">
+      <div class="flex items-center gap-2.5 text-emerald-800 mb-2">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <h3 class="font-bold text-sm">Resolver Caso de Atendimento (RF08)</h3>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-2 leading-relaxed">
+        Informe a justificativa ou orientação fornecida ao estudante para encerrar o caso:
+      </p>
+      <textarea id="modal-resolve-notes" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none mb-3" rows="3" placeholder="Ex: Orientado a solicitar via Portal no menu Secretaria..."></textarea>
+      <input type="hidden" id="modal-resolve-case-id">
+      <div class="flex gap-2 justify-end">
+        <button id="btn-cancel-resolve" class="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl text-xs">Cancelar</button>
+        <button id="btn-confirm-resolve" class="px-4 py-2 bg-[#00664F] text-white font-bold rounded-xl text-xs shadow">Encerrar Caso</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
