@@ -54,6 +54,88 @@ Conforme os requisitos das disciplinas:
 📄 .gitignore
 📄 README.md
 ```
+
+---
+
+## 🚀 3. Como Executar o Projeto
+
+### Pré-requisitos
+- **Python 3.11+**
+- **Flutter SDK 3.x**
+- *(Opcional)* **Docker e Docker Compose**
+
+---
+
+### ⚙️ 3.1 Backend (FastAPI + RAG)
+
+1. Navegue até a pasta do backend:
+   ```bash
+   cd src/backend
+   ```
+2. Crie e ative o ambiente virtual:
+   ```bash
+   # Windows (PowerShell)
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+
+   # Linux / macOS
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+3. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. *(Opcional)* Copie o arquivo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+5. Inicie o servidor da API:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+   > 📍 **API Backend:** [http://localhost:8000](http://localhost:8000)  
+   > 📖 **Documentação Swagger (OpenAPI):** [http://localhost:8000/docs](http://localhost:8000/docs)  
+   > 🧪 **Executar testes automatizados:** `pytest` (22 testes)
+
+*(Alternativa com Docker)*:
+```bash
+cd src/backend
+docker compose up -d
+```
+
+---
+
+### 📱 3.2 Mobile (Flutter)
+
+1. Em outro terminal, navegue até a pasta do mobile:
+   ```bash
+   cd src/mobile
+   ```
+2. Baixe as dependências do Flutter:
+   ```bash
+   flutter pub get
+   ```
+3. Execute o aplicativo no navegador (Google Chrome):
+   ```bash
+   flutter run -d chrome --web-port=3000
+   ```
+   > 📍 **App no Navegador:** [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 🔑 3.3 Credenciais de Teste para Avaliação
+
+O banco de dados SQLite local é inicializado automaticamente com os seguintes usuários fictícios:
+
+| Perfil | Identificador (RA / E-mail) | Senha | Acesso / Permissão |
+|---|---|---|---|
+| **Aluno** | `123456` | `senha123` | Orientações RAG, serviços, requerimentos |
+| **Atendente ASA** | `atendente@fecap.br` | `senha123` | Fila humana, escalonamentos e triagem |
+| **Administrador** | `admin@fecap.br` | `senha123` | Painel gerencial, auditoria e métricas RAG |
+
+---
+
 ## 📋 Licença/License
 
 A licença desse projeto é a <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons BY-SA 4.0<a/>.
