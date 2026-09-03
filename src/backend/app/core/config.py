@@ -22,7 +22,11 @@ class Settings(BaseSettings):
     RAG_CONFIDENCE_THRESHOLD: float = 0.60
     RAG_MAX_CHUNKS: int = 3
     RAG_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    KNOWLEDGE_BASE_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base"))
+    KNOWLEDGE_BASE_DIR: str = (
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base"))
+        if os.path.isdir(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")))
+        else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base"))
+    )
 
     # CORS
     CORS_ORIGINS: List[str] = ["*"]
