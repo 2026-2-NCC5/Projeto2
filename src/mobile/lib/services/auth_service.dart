@@ -5,6 +5,8 @@ import 'package:asa_connect/services/api_client.dart';
 class AuthService {
   final ApiClient _client = ApiClient();
 
+  String? get token => _client.token;
+
   Future<UserModel> login(String raOrEmail, String password) async {
     final response = await _client.post('/auth/login', {
       'ra_or_email': raOrEmail,

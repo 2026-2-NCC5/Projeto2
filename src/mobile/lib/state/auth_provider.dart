@@ -14,10 +14,15 @@ class AuthProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<bool> tryAutoLogin() async {
+    if (_authService.token == null || _authService.token!.isEmpty) {
+      _user = null;
+      _isLoading = false;
+      return false;
+    }
     try {
       _isLoading = true;
       notifyListeners();
-      _user = await _authService.getMe();
+      _user = await _authService.getMe().timeout(const Duration(seconds: 3));
       _isLoading = false;
       notifyListeners();
       return true;

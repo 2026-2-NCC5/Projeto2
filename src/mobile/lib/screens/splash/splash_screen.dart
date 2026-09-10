@@ -21,11 +21,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkInitialState() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
+    await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final loggedIn = await authProvider.tryAutoLogin();
+    bool loggedIn = false;
+    try {
+      loggedIn = await authProvider.tryAutoLogin().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => false,
+      );
+    } catch (_) {
+      loggedIn = false;
+    }
 
     if (!mounted) return;
     if (loggedIn) {

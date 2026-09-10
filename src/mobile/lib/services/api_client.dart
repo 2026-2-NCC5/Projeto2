@@ -51,29 +51,33 @@ class ApiClient {
 
   Future<http.Response> get(String path) async {
     final uri = Uri.parse('$_baseUrl$path');
-    return await http.get(uri, headers: _headers());
+    return await http.get(uri, headers: _headers()).timeout(const Duration(seconds: 10));
   }
 
   Future<http.Response> post(String path, dynamic body) async {
     final uri = Uri.parse('$_baseUrl$path');
-    return await http.post(
-      uri,
-      headers: _headers(),
-      body: jsonEncode(body),
-    );
+    return await http
+        .post(
+          uri,
+          headers: _headers(),
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
   }
 
   Future<http.Response> patch(String path, dynamic body) async {
     final uri = Uri.parse('$_baseUrl$path');
-    return await http.patch(
-      uri,
-      headers: _headers(),
-      body: jsonEncode(body),
-    );
+    return await http
+        .patch(
+          uri,
+          headers: _headers(),
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
   }
 
   Future<http.Response> delete(String path) async {
     final uri = Uri.parse('$_baseUrl$path');
-    return await http.delete(uri, headers: _headers());
+    return await http.delete(uri, headers: _headers()).timeout(const Duration(seconds: 10));
   }
 }
