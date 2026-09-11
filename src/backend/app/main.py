@@ -132,19 +132,6 @@ app.include_router(feedback.router, prefix=settings.API_V1_PREFIX)
 app.include_router(escalations.router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard.router, prefix=settings.API_V1_PREFIX)
 
-# Monta arquivos estáticos do aplicativo interativo
-static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-
-@app.get("/app", tags=["Aplicação Web"])
-async def serve_app():
-    """Serve a interface gráfica interativa do aplicativo mobile."""
-    index_file = os.path.join(static_dir, "index.html")
-    return FileResponse(index_file)
-
-
 @app.get("/health", tags=["Sistema"])
 async def health_check():
     """Healthcheck simples para monitoramento e docker healthcheck."""
@@ -158,16 +145,48 @@ async def health_check():
     }
 
 
-@app.get("/", tags=["Sistema"])
-async def root():
-    """Redireciona para o aplicativo interativo ou documentação."""
-    index_file = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return {
-        "message": "Bem-vindo à API do ASA Connect+ (Área do Sucesso Alvarista - FECAP)",
-        "docs": "/docs",
-        "app": "/app",
-        "health": "/health",
-        "api_v1": settings.API_V1_PREFIX,
-    }
+# Monta arquivos e diretórios estáticos do Flutter Web
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        
+    canvaskit_dir = os.path.join(static_dir, "canvaskit")
+    if os.path.exists(canvaskit_dir):
+        app.mount("/canvaskit", StaticFiles(directory=canvaskit_dir), name="canvaskit")
+
+    icons_dir = os.path.join(static_dir, "icons")
+    if os.path.exists(icons_dir):
+        app.mount("/icons", StaticFiles(directory=icons_dir), name="icons")
+
+    @app.get("/{file_name}.js", tags=["Flutter Web"])
+    async def serve_root_js(file_name: str):
+        target = os.path.join(static_dir, f"{file_name}.js")
+        if os.path.exists(target):
+            return FileResponse(target, media_type="application/javascript")
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+    @app.get("/{file_name}.json", tags=["Flutter Web"])
+    async def serve_root_json(file_name: str):
+        target = os.path.join(static_dir, f"{file_name}.json")
+        if os.path.exists(target):
+            return FileResponse(target, media_type="application/json")
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+    @app.get("/favicon.png", tags=["Flutter Web"])
+    async def serve_favicon():
+        fav = os.path.join(static_dir, "favicon.png")
+        if os.path.exists(fav):
+            return FileResponse(fav)
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+    @app.get("/app", tags=["Flutter Web"])
+    @app.get("/", tags=["Flutter Web"])
+    async def serve_flutter_app():
+        """Serve o aplicativo oficial Flutter Web."""
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+
