@@ -189,7 +189,7 @@ function renderAgentBubble(data) {
         </div>
       ` : ''}
 
-      <div>${escapeHtml(data.response_text)}</div>
+      <div class="prose-message text-slate-800 leading-relaxed text-xs">${formatMarkdownMessage(data.response_text)}</div>
 
       ${data.source_citation && !isAbstained ? `
         <div class="p-2 bg-slate-100/80 rounded-xl border border-slate-200/80 text-[10px] text-slate-600 font-medium flex items-center gap-1.5">
@@ -394,6 +394,36 @@ async function loadDashboard() {
 function escapeHtml(text) {
   if (!text) return '';
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatMarkdownMessage(text) {
+  if (!text) return '';
+  let safe = escapeHtml(text);
+  
+  // 1. Links em Markdown [Texto](URL)
+  safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-emerald-700 font-semibold underline hover:text-emerald-800">$1</a>');
+  
+  // 2. Negrito: **texto** -> <strong>
+  safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
+  
+  // 3. Títulos ### e ##
+  safe = safe.replace(/^###\s*(.*$)/gm, '<div class="font-bold text-emerald-900 mt-2.5 mb-1 text-[11px] uppercase tracking-wide">$1</div>');
+  safe = safe.replace(/^##\s*(.*$)/gm, '<div class="font-bold text-slate-900 mt-3 mb-1 text-xs">$1</div>');
+  
+  // 4. Bullets: • ou * ou -
+  safe = safe.replace(/^\s*[\*\-•]\s+(.*$)/gm, '<div class="flex items-start gap-1.5 my-1 text-xs text-slate-700 leading-relaxed"><span class="text-emerald-600 font-bold shrink-0 mt-0.5">•</span><span>$1</span></div>');
+  
+  // 5. Listas numeradas: 1. item
+  safe = safe.replace(/^\s*(\d+)\.\s+(.*$)/gm, '<div class="flex items-start gap-2 my-1.5 text-xs text-slate-700 leading-relaxed"><span class="bg-emerald-100 text-emerald-800 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5">$1</span><span>$2</span></div>');
+  
+  // 6. Linhas horizontais
+  safe = safe.replace(/^---$/gm, '<hr class="my-2 border-slate-200">');
+  
+  // 7. Quebras de parágrafo
+  safe = safe.replace(/\n\n+/g, '<div class="h-2"></div>');
+  safe = safe.replace(/\n/g, '<br>');
+  
+  return safe;
 }
 
 // DOM Setup and Event Listeners

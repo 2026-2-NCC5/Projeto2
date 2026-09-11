@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,13 @@ class Settings(BaseSettings):
         if os.path.isdir(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")))
         else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base"))
     )
+
+    # LLM & Geração Conversacional (Opcional)
+    LLM_PROVIDER: str = "auto"
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
+    LLM_MODEL: str = "gemini-2.0-flash"
 
     # CORS
     CORS_ORIGINS: List[str] = ["*"]

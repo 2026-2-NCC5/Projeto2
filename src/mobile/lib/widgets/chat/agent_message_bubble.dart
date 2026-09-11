@@ -107,10 +107,10 @@ class AgentMessageBubble extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
 
-                // Texto da Resposta
-                Text(
-                  message.content,
-                  style: TextStyle(
+                // Texto da Resposta com Formatação Rica
+                FormattedMarkdownText(
+                  text: message.content,
+                  baseStyle: TextStyle(
                     fontSize: 14,
                     color: isAbstained ? Colors.brown.shade900 : AppColors.textBody,
                     height: 1.45,
@@ -289,5 +289,157 @@ class AgentMessageBubble extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class FormattedMarkdownText extends StatelessWidget {
+  final String text;
+  final TextStyle baseStyle;
+
+  const FormattedMarkdownText({
+    super.key,
+    required this.text,
+    required this.baseStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = text.split('\n');
+    final children = <Widget>[];
+
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        children.add(const SizedBox(height: 6));
+        continue;
+      }
+
+      // Headers ### or ##
+      if (trimmed.startsWith('###') || trimmed.startsWith('##')) {
+        final title = trimmed.replaceFirst(RegExp(r'^#+\s*'), '');
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              title,
+              style: baseStyle.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryGreen,
+                fontSize: baseStyle.fontSize! + 0.5,
+              ),
+            ),
+          ),
+        );
+        continue;
+      }
+
+      // Bullets (• or * or -)
+      if (trimmed.startsWith('•') || trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+        final content = trimmed.replaceFirst(RegExp(r'^[\•\*\-]\s*'), '');
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 5, right: 6),
+                  child: Icon(Icons.circle, size: 5, color: AppColors.primaryGreen),
+                ),
+                Expanded(
+                  child: RichText(
+                    text: _parseSpans(content, baseStyle),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        continue;
+      }
+
+      // Numbered list (1. 2. etc)
+      final numMatch = RegExp(r'^(\d+)[\.\)]\s*(.*)$').firstMatch(trimmed);
+      if (numMatch != null) {
+        final numStr = numMatch.group(1)!;
+        final content = numMatch.group(2)!;
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 2, right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentMint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    numStr,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryDarkGreen,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: RichText(
+                    text: _parseSpans(content, baseStyle),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        continue;
+      }
+
+      // Normal paragraph with bold parsing
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: RichText(
+            text: _parseSpans(trimmed, baseStyle),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  TextSpan _parseSpans(String text, TextStyle style) {
+    final spans = <TextSpan>[];
+    final regex = RegExp(r'\*\*(.*?)\*\*');
+    int lastIndex = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(
+          text: text.substring(lastIndex, match.start),
+          style: style,
+        ));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: style.copyWith(fontWeight: FontWeight.bold),
+      ));
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastIndex),
+        style: style,
+      ));
+    }
+
+    return TextSpan(children: spans);
   }
 }

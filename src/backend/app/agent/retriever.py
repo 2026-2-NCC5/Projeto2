@@ -76,13 +76,36 @@ class KnowledgeRetriever:
             except Exception:
                 frontmatter = {}
 
-        slug = frontmatter.get("slug", os.path.splitext(os.path.basename(file_path))[0])
-        title = frontmatter.get("title", slug.replace("_", " ").title())
-        source = frontmatter.get("official_source", "Secretaria Geral / Manual do Aluno")
+        slug = (
+            frontmatter.get("slug")
+            or frontmatter.get("document_slug")
+            or os.path.splitext(os.path.basename(file_path))[0]
+        )
+        title = (
+            frontmatter.get("title")
+            or frontmatter.get("document_title")
+            or slug.replace("_", " ").title()
+        )
+        source = (
+            frontmatter.get("official_source")
+            or frontmatter.get("source_url")
+            or "Secretaria Geral / Manual do Aluno"
+        )
         default_section = frontmatter.get("section", "Procedimento Geral")
-        version = str(frontmatter.get("version", "v1.0"))
-        updated_at = str(frontmatter.get("updated_at", "2024-10-15"))
+        version = str(frontmatter.get("version", "v2026.1"))
+        updated_at = str(
+            frontmatter.get("updated_at")
+            or frontmatter.get("extracted_at")
+            or "2026-09-11"
+        )
         category = frontmatter.get("category", "Geral")
+
+        # Palavras-chave do frontmatter
+        raw_keywords = frontmatter.get("keywords", [])
+        if isinstance(raw_keywords, list):
+            keywords_text = " ".join(str(k) for k in raw_keywords)
+        else:
+            keywords_text = str(raw_keywords)
 
         # Divide o corpo em seções por títulos (# e ##)
         section_pattern = r"(^|\n)(#{1,3}\s+[^\n]+)"
@@ -92,22 +115,30 @@ class KnowledgeRetriever:
         current_section = default_section
         current_text = ""
 
+        def clean_section_name(sec: str) -> str:
+            # Remove emojis e marcadores visuais do título da seção para citações limpas
+            cleaned = re.sub(r"[^\w\s\-\(\)\/\.\,Á-ú]", "", sec).strip()
+            return cleaned if cleaned else "Procedimento Geral"
+
         for part in splits:
             part = part.strip()
             if not part:
                 continue
             if part.startswith("#"):
                 if current_text:
+                    full_content = current_text
+                    if keywords_text:
+                        full_content += f"\n\nPalavras-chave: {keywords_text}"
                     chunks.append(
                         Chunk(
                             document_slug=slug,
                             document_title=title,
                             official_source=source,
-                            section=current_section,
+                            section=clean_section_name(current_section),
                             version=version,
                             updated_at=updated_at,
                             category=category,
-                            content=current_text,
+                            content=full_content,
                             file_path=file_path,
                         )
                     )
@@ -120,16 +151,19 @@ class KnowledgeRetriever:
                     current_text = part
 
         if current_text:
+            full_content = current_text
+            if keywords_text:
+                full_content += f"\n\nPalavras-chave: {keywords_text}"
             chunks.append(
                 Chunk(
                     document_slug=slug,
                     document_title=title,
                     official_source=source,
-                    section=current_section,
+                    section=clean_section_name(current_section),
                     version=version,
                     updated_at=updated_at,
                     category=category,
-                    content=current_text,
+                    content=full_content,
                     file_path=file_path,
                 )
             )
@@ -153,6 +187,7 @@ class KnowledgeRetriever:
 
         md_files = [f for f in os.listdir(self.kb_dir) if f.endswith(".md") and f != "README.md"]
 
+        seen_slugs = set()
         for filename in md_files:
             file_path = os.path.join(self.kb_dir, filename)
             file_chunks = self.parse_markdown_file(file_path)
@@ -160,19 +195,21 @@ class KnowledgeRetriever:
             # Sincroniza metadados no banco se houver sessão
             if db and file_chunks:
                 first_chunk = file_chunks[0]
-                existing_doc = db.query(KnowledgeDocument).filter(KnowledgeDocument.slug == first_chunk.document_slug).first()
-                if not existing_doc:
-                    db_doc = KnowledgeDocument(
-                        slug=first_chunk.document_slug,
-                        title=first_chunk.document_title,
-                        category=first_chunk.category,
-                        file_path=file_path,
-                        official_source=first_chunk.official_source,
-                        section=first_chunk.section,
-                        version=first_chunk.version,
-                        is_active=True,
-                    )
-                    db.add(db_doc)
+                if first_chunk.document_slug not in seen_slugs:
+                    seen_slugs.add(first_chunk.document_slug)
+                    existing_doc = db.query(KnowledgeDocument).filter(KnowledgeDocument.slug == first_chunk.document_slug).first()
+                    if not existing_doc:
+                        db_doc = KnowledgeDocument(
+                            slug=first_chunk.document_slug,
+                            title=first_chunk.document_title,
+                            category=first_chunk.category,
+                            file_path=file_path,
+                            official_source=first_chunk.official_source,
+                            section=first_chunk.section,
+                            version=first_chunk.version,
+                            is_active=True,
+                        )
+                        db.add(db_doc)
             
             for chunk in file_chunks:
                 if chunk.document_slug not in inactive_slugs:

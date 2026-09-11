@@ -25,7 +25,7 @@ def test_rag_semantic_retrieval_atestado():
     results = retriever.retrieve("Como faço para solicitar meu atestado de matrícula no portal?", top_k=3)
     assert len(results) > 0
     top = results[0]
-    assert top["chunk"]["document_slug"] == "atestado_matricula"
+    assert top["chunk"]["document_slug"] in ("atestado_matricula", "servico_atestado_matricula")
     assert top["similarity"] >= 0.50
 
 

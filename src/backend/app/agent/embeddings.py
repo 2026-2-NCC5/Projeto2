@@ -25,10 +25,14 @@ STOPWORDS_PT: Set[str] = {
     "a", "o", "as", "os", "um", "uma", "uns", "umas", "de", "do", "da", "dos", "das",
     "em", "no", "na", "nos", "nas", "para", "por", "com", "como", "que", "e", "ou",
     "se", "eu", "meu", "minha", "meus", "minhas", "voce", "ele", "ela", "qual", "quais",
-    "onde", "quando", "quem", "quanto", "sobre", "este", "esta", "esse", "essa",
-    "posso", "pode", "podem", "consigo", "consegue", "quero", "queria", "gostaria",
-    "preciso", "precisa", "faco", "fazer", "saber", "obter", "ter", "ser", "esta", "estao",
-    "ola", "bom", "dia", "boa", "tarde", "noite", "ajuda", "ajudar", "favor",
+    "onde", "quando", "quem", "quanto", "quantas", "quantos", "quanta", "sobre", "este",
+    "esta", "esse", "essa", "posso", "pode", "podem", "consigo", "consegue", "quero",
+    "queria", "gostaria", "preciso", "precisa", "faco", "fazer", "saber", "obter", "ter",
+    "ser", "esta", "estao", "ola", "bom", "dia", "boa", "tarde", "noite", "ajuda",
+    "ajudar", "favor", "acontece", "acontecer", "devo", "deve", "dever", "seria",
+    "aluno", "alunos", "estudante", "estudantes", "faculdade", "fecap", "universidade",
+    "semestre", "ano", "caso", "coisa", "mim", "pego", "funciona", "passar", "tirar",
+    "sao", "for", "foi", "forem", "tipo", "tipos",
 }
 
 
@@ -37,8 +41,11 @@ def get_stem(word: str) -> str:
     w = normalize_text(word)
     if len(w) <= 3:
         return w
-    # Sufixos verbais e nominais comuns em PT
-    suffixes = ["coes", "cao", "mentos", "mento", "ando", "endo", "indo", "aram", "erem", "irem", "ado", "ido", "ar", "er", "ir", "as", "es", "os", "s"]
+    # Sufixos verbais e nominais comuns em PT (ordenados dos mais longos aos mais curtos)
+    suffixes = [
+        "coes", "cao", "mentos", "mento", "ando", "endo", "indo", "aram", "erem", "irem",
+        "aria", "ario", "ado", "ido", "ar", "er", "ir", "as", "es", "os", "s", "a", "o"
+    ]
     for s in suffixes:
         if w.endswith(s) and len(w) - len(s) >= 3:
             return w[:-len(s)]
@@ -93,7 +100,7 @@ class TextVectorizer:
         Calcula o score de relevância calibrado (0.0 a 1.0).
         """
         raw_cos = cosine_similarity(query_vector, doc_vectors)[0]
-        calibrated_cos = np.clip(raw_cos * 2.2, 0.0, 1.0)
+        calibrated_cos = np.clip(raw_cos * 2.5, 0.0, 1.0)
 
         q_stems = extract_keywords(query)
         if not q_stems:
@@ -108,6 +115,8 @@ class TextVectorizer:
 
         keyword_arr = np.array(keyword_scores)
         
-        # Média ponderada
-        final_scores = 0.40 * calibrated_cos + 0.60 * keyword_arr
+        # Média ponderada calibrada
+        final_scores = 0.50 * calibrated_cos + 0.50 * keyword_arr
+        # Se a similaridade cosseno for forte, protege o score contra penalidade excessiva de keywords
+        final_scores = np.maximum(final_scores, calibrated_cos * 0.90)
         return np.clip(final_scores, 0.0, 1.0)

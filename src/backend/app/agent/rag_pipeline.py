@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional
 from app.agent.retriever import retriever
 from app.agent.abstention import should_abstain, load_rag_config
 from app.core.config import settings
+from app.agent.synthesizer import synthesize_response
 
 
 class RAGPipeline:
@@ -13,7 +14,7 @@ class RAGPipeline:
         self.config = load_rag_config()
         self.agent_version = self.config.get("agent", {}).get("version", "asa-rag-v1.0.0")
 
-    def answer_query(self, query: str, top_k: int = 3) -> Dict[str, Any]:
+    def answer_query(self, query: str, top_k: int = 4) -> Dict[str, Any]:
         """
         Processa uma pergunta do estudante e gera a resposta fundamentada com rastreabilidade total.
         """
@@ -76,17 +77,29 @@ class RAGPipeline:
         # Chip de fonte no formato exato solicitado na seção 5 do briefing e no Figma
         source_citation = f"Fonte: {doc_title} · {section} · atualizado em {updated_at}"
 
-        # Monta resposta concisa e direta baseada nos trechos recuperados
-        answer_text = top_chunk["content"].strip()
+        # Síntese conversacional inteligente (LLM ou Local Alvarista)
+        answer_text = synthesize_response(query, retrieved_results)
         
-        # Sugestão de próxima ação (RF07)
-        suggested_action = f"Acesse o Portal do Aluno na seção '{top_chunk.get('category', 'Serviços')}' para prosseguir."
-        if "atestado" in query.lower() or "matricula" in top_chunk["document_slug"]:
+        # Sugestão dinâmica de próxima ação (RF07)
+        q_low = query.lower()
+        slug_low = top_chunk["document_slug"].lower()
+        
+        if "atestado" in q_low or "matricula" in slug_low:
             suggested_action = "Acesse o Portal do Aluno > Secretaria > Emissão de Documentos."
-        elif "boleto" in query.lower() or "financeiro" in top_chunk["document_slug"]:
+        elif "boleto" in q_low or "financeiro" in slug_low or "mensalidade" in q_low:
             suggested_action = "Acesse o Portal do Aluno > Financeiro > Boletos e Pagamentos."
-        elif "estagio" in query.lower():
+        elif "estagio" in q_low:
             suggested_action = "Envie o TCE assinado via Portal do Aluno > Documentos > Estágio."
+        elif "biblioteca" in q_low or "livro" in q_low or "multa" in q_low:
+            suggested_action = "Acesse o Catálogo Online da Biblioteca Paulo Ernesto Tolle para renovações e reservas."
+        elif "transferencia" in q_low or "turno" in q_low:
+            suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Transferência de Turno."
+        elif "falta" in q_low or "abono" in q_low:
+            suggested_action = "Solicite em Portal do Aluno > Requerimentos > Compensação de Faltas (em até 5 dias)."
+        elif "substitutiva" in q_low or "prova" in q_low:
+            suggested_action = "Solicite a Avaliação Substitutiva via Portal do Aluno > Requerimentos no período do calendário oficial."
+        else:
+            suggested_action = f"Acesse o Portal do Aluno na seção '{top_chunk.get('category', 'Serviços')}' para prosseguir."
 
         return {
             "content": answer_text,
