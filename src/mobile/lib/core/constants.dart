@@ -65,6 +65,6 @@ class AppConstants {
   static const String appName = "ASA Connect+";
   static const String institutionName = "ÁREA DO SUCESSO ALVARISTA FECAP";
   
-  // URL base padrão da API (localhost funciona para Web, Desktop e celular Android via adb reverse)
-  static const String defaultApiBaseUrl = "http://localhost:8000/api/v1";
+  // URL base padrão da API em nuvem (Render + Supabase)
+  static const String defaultApiBaseUrl = "https://projeto2-7gf7.onrender.com/api/v1";
 }
