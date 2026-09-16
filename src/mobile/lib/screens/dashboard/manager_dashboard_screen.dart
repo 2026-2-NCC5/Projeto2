@@ -20,6 +20,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   List<dynamic> _documents = [];
   List<dynamic> _auditLogs = [];
 
+  final TextEditingController _ragSearchController = TextEditingController();
+  String _ragSearchQuery = '';
+  String _ragCategoryFilter = 'Todos';
+
   @override
   void initState() {
     super.initState();
@@ -30,16 +34,24 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   @override
   void dispose() {
     _tabController.dispose();
+    _ragSearchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDashboardData() async {
     setState(() => _isLoading = true);
     try {
-      final statsResp = await _client.get('/dashboard/stats');
-      final escResp = await _client.get('/escalations');
-      final docsResp = await _client.get('/documents?active_only=false');
-      final logsResp = await _client.get('/dashboard/audit-logs?limit=15');
+      final results = await Future.wait([
+        _client.get('/dashboard/stats'),
+        _client.get('/escalations'),
+        _client.get('/documents?active_only=false'),
+        _client.get('/dashboard/audit-logs?limit=15'),
+      ]);
+
+      final statsResp = results[0];
+      final escResp = results[1];
+      final docsResp = results[2];
+      final logsResp = results[3];
 
       if (statsResp.statusCode == 200) {
         _stats = jsonDecode(utf8.decode(statsResp.bodyBytes));
@@ -428,66 +440,313 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     );
   }
 
-  Widget _buildKnowledgeBaseTab() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _documents.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final doc = _documents[index];
-        final isActive = doc['is_active'] == true;
-
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderLight),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isActive ? AppColors.accentMint : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
+  void _showDocumentDetail(Map<String, dynamic> doc) {
+    final isActive = doc['is_active'] == true;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentMint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.description_outlined, color: AppColors.primaryGreen, size: 22),
                 ),
-                child: Icon(
-                  Icons.menu_book_rounded,
-                  color: isActive ? AppColors.primaryGreen : AppColors.textLight,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      doc['title'],
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: isActive ? AppColors.textDark : AppColors.textMuted,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        doc['title'] ?? 'Documento RAG',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
                       ),
+                      Text(
+                        'Categoria: ${doc['category'] ?? "Geral"}',
+                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDocInfoRow('Fonte Oficial:', doc['official_source'] ?? 'Portal FECAP'),
+                  _buildDocInfoRow('Identificador (Slug):', doc['slug'] ?? 'N/A'),
+                  _buildDocInfoRow('Status no Motor RAG:', isActive ? 'ATIVO (Indexado na Busca)' : 'DESATIVADO (Excluído da IA)'),
+                  if (doc['chunk_count'] != null)
+                    _buildDocInfoRow('Fragmentos (Chunks):', '${doc['chunk_count']} vetores'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Ativar no Motor de Busca:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                Switch(
+                  value: isActive,
+                  activeColor: AppColors.primaryGreen,
+                  onChanged: (val) {
+                    Navigator.of(ctx).pop();
+                    _toggleDocumentActive(doc['id'], isActive);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKnowledgeBaseTab() {
+    final categories = ['Todos', 'Matrícula', 'Financeiro', 'Secretaria', 'Documentos', 'Estágio', 'Regimento'];
+    final filteredDocs = _documents.where((doc) {
+      final title = (doc['title'] ?? '').toString().toLowerCase();
+      final cat = (doc['category'] ?? '').toString().toLowerCase();
+      final source = (doc['official_source'] ?? '').toString().toLowerCase();
+      final matchesQuery = _ragSearchQuery.isEmpty ||
+          title.contains(_ragSearchQuery) ||
+          cat.contains(_ragSearchQuery) ||
+          source.contains(_ragSearchQuery);
+
+      final matchesCat = _ragCategoryFilter == 'Todos' ||
+          cat.contains(_ragCategoryFilter.toLowerCase());
+
+      return matchesQuery && matchesCat;
+    }).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Banner de Governança RAG (RF16)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFBBF7D0)),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.verified_user_rounded, color: AppColors.primaryGreen, size: 22),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Governança de Fontes RAG (RF16)',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.headerGreen),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Fontes ativadas são consultadas pela IA para gerar respostas com citações auditáveis. Ao desativar uma fonte, ela é imediatamente removida da busca do ASA Connect.',
+                        style: TextStyle(fontSize: 11, color: AppColors.textDark, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Campo de Busca
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search_rounded, color: AppColors.textLight, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _ragSearchController,
+                    onChanged: (val) => setState(() => _ragSearchQuery = val.toLowerCase().trim()),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar documentos ou categorias...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${doc['category']} · ${doc['official_source']}',
-                      style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                  ),
+                ),
+                if (_ragSearchQuery.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: () {
+                      _ragSearchController.clear();
+                      setState(() => _ragSearchQuery = '');
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Chips de Categoria
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: categories.map((cat) {
+                final isSelected = _ragCategoryFilter == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(cat),
+                    selected: isSelected,
+                    selectedColor: AppColors.primaryGreen,
+                    labelStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : AppColors.textDark,
                     ),
+                    onSelected: (_) => setState(() => _ragCategoryFilter = cat),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Lista de Documentos
+          if (filteredDocs.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
+                  children: [
+                    Icon(Icons.search_off_rounded, size: 40, color: Colors.grey.shade400),
+                    const SizedBox(height: 8),
+                    const Text('Nenhuma fonte encontrada com os filtros atuais.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   ],
                 ),
               ),
-              Switch(
-                value: isActive,
-                activeColor: AppColors.primaryGreen,
-                onChanged: (_) => _toggleDocumentActive(doc['id'], isActive),
-              ),
-            ],
-          ),
-        );
-      },
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredDocs.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final doc = filteredDocs[index];
+                final isActive = doc['is_active'] == true;
+
+                return Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => _showDocumentDetail(doc),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.borderLight),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isActive ? AppColors.accentMint : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.menu_book_rounded,
+                              color: isActive ? AppColors.primaryGreen : AppColors.textLight,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  doc['title'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isActive ? AppColors.textDark : AppColors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${doc['category']} · ${doc['official_source']}',
+                                  style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: isActive,
+                            activeColor: AppColors.primaryGreen,
+                            onChanged: (_) => _toggleDocumentActive(doc['id'], isActive),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 

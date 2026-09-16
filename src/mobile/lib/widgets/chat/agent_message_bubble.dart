@@ -18,6 +18,7 @@ class AgentMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAbstained = message.isAbstained;
+    final isAttendant = message.sender == 'ATTENDANT';
     final timeStr = DateFormat('HH:mm').format(message.createdAt);
 
     return Padding(
@@ -32,12 +33,16 @@ class AgentMessageBubble extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isAbstained ? AppColors.abstentionAmber : AppColors.primaryGreen,
+                  color: isAttendant
+                      ? const Color(0xFF047857)
+                      : (isAbstained ? AppColors.abstentionAmber : AppColors.primaryGreen),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
-                    isAbstained ? Icons.warning_amber_rounded : Icons.support_agent_rounded,
+                    isAttendant
+                        ? Icons.verified_user_rounded
+                        : (isAbstained ? Icons.warning_amber_rounded : Icons.support_agent_rounded),
                     color: Colors.white,
                     size: 14,
                   ),
@@ -45,13 +50,30 @@ class AgentMessageBubble extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'ASA Connect +',
+                isAttendant ? 'Atendente ASA (Equipe FECAP)' : 'ASA Connect +',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isAbstained ? AppColors.abstentionAmber : AppColors.primaryGreen,
+                  color: isAttendant
+                      ? const Color(0xFF047857)
+                      : (isAbstained ? AppColors.abstentionAmber : AppColors.primaryGreen),
                 ),
               ),
+              if (isAttendant) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD1FAE5),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF6EE7B7)),
+                  ),
+                  child: const Text(
+                    'ATENDIMENTO HUMANO',
+                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
+                  ),
+                ),
+              ],
               const SizedBox(width: 6),
               Text(
                 timeStr,
@@ -65,7 +87,9 @@ class AgentMessageBubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isAbstained ? AppColors.abstentionBg : AppColors.surfaceCard,
+              color: isAttendant
+                  ? const Color(0xFFF0FDF4)
+                  : (isAbstained ? AppColors.abstentionBg : AppColors.surfaceCard),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(16),
@@ -73,8 +97,10 @@ class AgentMessageBubble extends StatelessWidget {
                 bottomRight: Radius.circular(16),
               ),
               border: Border.all(
-                color: isAbstained ? AppColors.abstentionBorder : AppColors.borderLight,
-                width: isAbstained ? 1.5 : 1.0,
+                color: isAttendant
+                    ? const Color(0xFF86EFAC)
+                    : (isAbstained ? AppColors.abstentionBorder : AppColors.borderLight),
+                width: isAbstained || isAttendant ? 1.5 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
@@ -87,6 +113,26 @@ class AgentMessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Alerta visual de Atendente Humano
+                if (isAttendant) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 16),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'RESPOSTA OFICIAL DO ATENDIMENTO ASA',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF065F46),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
                 // Alerta visual quando em abstenção
                 if (isAbstained) ...[
                   Row(

@@ -2,26 +2,110 @@ import 'package:flutter/material.dart';
 import 'package:asa_connect/core/constants.dart';
 import 'package:asa_connect/screens/academic_services/service_detail_screen.dart';
 
-class AcademicServicesScreen extends StatelessWidget {
+class AcademicServicesScreen extends StatefulWidget {
   final bool isTab;
+  final String? filterCategory;
 
-  const AcademicServicesScreen({super.key, this.isTab = false});
+  const AcademicServicesScreen({super.key, this.isTab = false, this.filterCategory});
+
+  @override
+  State<AcademicServicesScreen> createState() => _AcademicServicesScreenState();
+}
+
+class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  late String _selectedCategory;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.filterCategory ?? 'Todos';
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final categories = ['Todos', 'Matrícula', 'Requerimentos', 'Documentos', 'Diploma', 'Financeiro', 'AAC'];
+
     final content = SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Subtítulo do Topo
-          const Text(
-            'Selecione uma categoria abaixo para acessar os serviços disponíveis para o seu perfil de Aluno.',
-            style: TextStyle(fontSize: 12, color: AppColors.textBody, height: 1.4),
+          // Campo de busca de serviços
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) => setState(() => _searchQuery = val.toLowerCase().trim()),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar serviço ou procedimento...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                if (_searchQuery.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.clear_rounded, size: 18),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Chips de categorias
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: categories.map((cat) {
+                final isSelected = _selectedCategory == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(cat),
+                    selected: isSelected,
+                    selectedColor: AppColors.primaryGreen,
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : AppColors.textBody,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: isSelected ? AppColors.primaryGreen : AppColors.borderLight),
+                    ),
+                    onSelected: (_) => setState(() => _selectedCategory = cat),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 16),
 
-            // 1. Matrícula
+          // Grupos de Serviços Filtrados
+          if (_matchesCategory('Matrícula'))
             _buildServiceGroup(
               context,
               icon: Icons.app_registration_rounded,
@@ -30,7 +114,7 @@ class AcademicServicesScreen extends StatelessWidget {
                 _ServiceItem(
                   title: 'Renovação de Matrícula',
                   slug: 'rematricula_prazos_regras',
-                  badge: null,
+                  badge: 'Essencial',
                 ),
                 _ServiceItem(
                   title: 'Trancamento de Curso',
@@ -44,9 +128,35 @@ class AcademicServicesScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
-            // 2. Histórico & Documentos
+          if (_matchesCategory('Requerimentos')) ...[
+            const SizedBox(height: 16),
+            _buildServiceGroup(
+              context,
+              icon: Icons.assignment_outlined,
+              categoryTitle: 'Requerimentos Gerais',
+              items: [
+                _ServiceItem(
+                  title: 'Revisão de Notas e Faltas',
+                  slug: 'revisao_notas_faltas',
+                  badge: null,
+                ),
+                _ServiceItem(
+                  title: 'Aproveitamento de Estudos / Dispensa',
+                  slug: 'dispensa_disciplinas',
+                  badge: null,
+                ),
+                _ServiceItem(
+                  title: 'Mudança de Curso ou Turno',
+                  slug: 'transferencia_interna_mudanca_curso',
+                  badge: null,
+                ),
+              ],
+            ),
+          ],
+
+          if (_matchesCategory('Documentos')) ...[
+            const SizedBox(height: 16),
             _buildServiceGroup(
               context,
               icon: Icons.history_edu_rounded,
@@ -59,19 +169,46 @@ class AcademicServicesScreen extends StatelessWidget {
                 ),
                 _ServiceItem(
                   title: 'Emitir Histórico Escolar',
-                  slug: 'atestado_matricula',
+                  slug: 'historico_escolar_emissao',
                   badge: null,
                 ),
                 _ServiceItem(
                   title: 'Boletim de Notas',
-                  slug: 'atestado_matricula',
+                  slug: 'boletim_notas',
                   badge: 'Oficial',
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
 
-            // 3. Diploma & Conclusão
+          if (_matchesCategory('Financeiro')) ...[
+            const SizedBox(height: 16),
+            _buildServiceGroup(
+              context,
+              icon: Icons.account_balance_wallet_outlined,
+              categoryTitle: 'Financeiro',
+              items: [
+                _ServiceItem(
+                  title: '2ª Via de Boleto Bancário',
+                  slug: 'servico_segunda_via_de_boleto_bancario',
+                  badge: 'Rápido',
+                ),
+                _ServiceItem(
+                  title: 'Acordo e Negociação de Mensalidades',
+                  slug: 'servico_acordo_financeiro',
+                  badge: null,
+                ),
+                _ServiceItem(
+                  title: 'Informe de Rendimentos para IR',
+                  slug: 'servico_informe_de_rendimentos',
+                  badge: null,
+                ),
+              ],
+            ),
+          ],
+
+          if (_matchesCategory('Diploma')) ...[
+            const SizedBox(height: 16),
             _buildServiceGroup(
               context,
               icon: Icons.school_rounded,
@@ -89,13 +226,14 @@ class AcademicServicesScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+          ],
 
-            // 4. Atividades Complementares
+          if (_matchesCategory('AAC')) ...[
+            const SizedBox(height: 16),
             _buildServiceGroup(
               context,
               icon: Icons.military_tech_outlined,
-              categoryTitle: 'Atividades Complementares',
+              categoryTitle: 'Atividades Complementares (AAC)',
               items: [
                 _ServiceItem(
                   title: 'Envio de Certificados (AAC)',
@@ -109,12 +247,14 @@ class AcademicServicesScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
           ],
-        ),
-      );
 
-    if (isTab) {
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+
+    if (widget.isTab) {
       return Container(
         color: AppColors.background,
         child: content,
@@ -136,12 +276,25 @@ class AcademicServicesScreen extends StatelessWidget {
     );
   }
 
+  bool _matchesCategory(String cat) {
+    if (_selectedCategory == 'Todos') return true;
+    if (_selectedCategory == cat) return true;
+    return false;
+  }
+
   Widget _buildServiceGroup(
     BuildContext context, {
     required IconData icon,
     required String categoryTitle,
     required List<_ServiceItem> items,
   }) {
+    final filteredItems = items.where((i) {
+      if (_searchQuery.isEmpty) return true;
+      return i.title.toLowerCase().contains(_searchQuery);
+    }).toList();
+
+    if (filteredItems.isEmpty) return const SizedBox.shrink();
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -168,7 +321,7 @@ class AcademicServicesScreen extends StatelessWidget {
           const Divider(height: 1, color: AppColors.borderLight),
 
           // Lista de Itens
-          ...items.map((item) {
+          ...filteredItems.map((item) {
             return ListTile(
               title: Text(
                 item.title,

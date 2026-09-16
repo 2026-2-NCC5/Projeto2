@@ -236,8 +236,26 @@ class KnowledgeRetriever:
         if not self.chunks or self.chunk_vectors is None or self.chunk_vectors.shape[0] == 0:
             return []
 
-        query_vec = self.vectorizer.transform([query])
-        similarities = self.vectorizer.compute_similarity(query, query_vec, self.chunk_vectors)
+        # Normaliza e higieniza prefixos conversacionais que diluem similaridade
+        clean_query = query.strip()
+        prefixes_to_strip = [
+            "gostaria de tirar dúvidas sobre o procedimento de:",
+            "gostaria de tirar duvidas sobre o procedimento de:",
+            "gostaria de tirar dúvidas sobre:",
+            "gostaria de tirar duvidas sobre:",
+            "gostaria de saber como funciona:",
+            "gostaria de saber sobre o procedimento de:",
+            "gostaria de saber sobre:",
+            "quais documentos e procedimentos oficiais existem na categoria",
+            "procedimento de:",
+        ]
+        for p in prefixes_to_strip:
+            if clean_query.lower().startswith(p):
+                clean_query = clean_query[len(p):].strip()
+                break
+
+        query_vec = self.vectorizer.transform([clean_query])
+        similarities = self.vectorizer.compute_similarity(clean_query, query_vec, self.chunk_vectors)
 
         # Ordena por similaridade decrescente
         top_indices = similarities.argsort()[::-1][:top_k]

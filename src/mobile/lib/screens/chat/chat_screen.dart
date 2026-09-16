@@ -124,6 +124,53 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _showSessionInfoDialog(BuildContext context, ChatProvider chatProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.hub_outlined, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Sessão ASA Connect', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSessionRow('ID da Conversa:', chatProvider.activeConversationId ?? 'Nova Conversa'),
+            _buildSessionRow('Motor RAG:', 'BM25 Híbrido + Embeddings Vetoriais'),
+            _buildSessionRow('Versão do Agente:', 'asa-rag-v1.0 (Auditável)'),
+            _buildSessionRow('Status da Conexão:', 'Online • Base Supabase Oficial'),
+            _buildSessionRow('Total de Mensagens:', '${chatProvider.messages.length} carregadas'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
@@ -141,9 +188,52 @@ class _ChatScreenState extends State<ChatScreen> {
             tooltip: 'Falar com o ASA (Atendimento Humano)',
             onPressed: () => _showEscalationDialog(context),
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: Colors.white, size: 20),
-            onPressed: () {},
+            onSelected: (val) {
+              if (val == 'new_chat') {
+                chatProvider.startNewChat();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nova conversa iniciada.'), backgroundColor: AppColors.success),
+                );
+              } else if (val == 'escalate') {
+                _showEscalationDialog(context);
+              } else if (val == 'info') {
+                _showSessionInfoDialog(context, chatProvider);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'new_chat',
+                child: Row(
+                  children: [
+                    Icon(Icons.add_comment_outlined, size: 18, color: AppColors.primaryGreen),
+                    SizedBox(width: 8),
+                    Text('Nova Conversa'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'escalate',
+                child: Row(
+                  children: [
+                    Icon(Icons.headset_mic_outlined, size: 18, color: AppColors.primaryGreen),
+                    SizedBox(width: 8),
+                    Text('Falar com o ASA'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'info',
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primaryGreen),
+                    SizedBox(width: 8),
+                    Text('Informações da Sessão'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

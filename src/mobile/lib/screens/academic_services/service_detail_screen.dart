@@ -17,7 +17,7 @@ class ServiceDetailScreen extends StatelessWidget {
   void _askAssistant(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.startNewChat();
-    chatProvider.sendMessage("Gostaria de tirar dúvidas sobre o procedimento de: $serviceTitle");
+    chatProvider.sendMessage("Como funciona e como solicitar o serviço de $serviceTitle na FECAP?");
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ChatScreen()),
     );

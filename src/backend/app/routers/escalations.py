@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from app.core.database import get_db
 from app.core.security import get_current_user, require_profiles
 from app.models.user import User, ProfileType
-from app.models.chat import Conversation
+from app.models.chat import Conversation, ChatMessage, MessageSender
 from app.models.escalation import EscalationCase, EscalationStatus, EscalationPriority
 from app.models.audit import AuditLog
 from app.schemas.escalation import (
@@ -122,12 +122,19 @@ def list_escalations(
         query = query.filter(EscalationCase.status == status_filter)
     
     # Ordena por prioridade e data de criação
-    cases = query.order_by(EscalationCase.status, EscalationCase.created_at.asc()).all()
+    cases = query.order_by(EscalationCase.status, EscalationCase.created_at.asc()).limit(100).all()
+
+    # Busca em lote usuários envolvidos para evitar consultas N+1
+    user_ids = {c.student_id for c in cases} | {c.assigned_attendant_id for c in cases if c.assigned_attendant_id}
+    users_by_id = {}
+    if user_ids:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        users_by_id = {u.id: u for u in users}
 
     results = []
     for c in cases:
-        student = db.query(User).filter(User.id == c.student_id).first()
-        attendant = db.query(User).filter(User.id == c.assigned_attendant_id).first() if c.assigned_attendant_id else None
+        student = users_by_id.get(c.student_id)
+        attendant = users_by_id.get(c.assigned_attendant_id) if c.assigned_attendant_id else None
         
         results.append(
             EscalationResponse(
@@ -161,7 +168,8 @@ def resolve_escalation(
     db: Session = Depends(get_db),
 ):
     """
-    Atendente resolve um caso escalonado registrando a justificativa de atendimento (RF08).
+    Atendente resolve um caso escalonado registrando a justificativa de atendimento (RF08)
+    e enviando automaticamente a orientação diretamente para a conversa do aluno.
     """
     case = db.query(EscalationCase).filter(EscalationCase.id == case_id).first()
     if not case:
@@ -181,6 +189,29 @@ def resolve_escalation(
     case.assigned_attendant_id = current_user.id
     case.resolved_at = datetime.now(timezone.utc)
     case.updated_at = datetime.now(timezone.utc)
+
+    # Injeta a resposta do atendente diretamente na conversa do estudante
+    attendant_msg = ChatMessage(
+        conversation_id=case.conversation_id,
+        sender=MessageSender.ATTENDANT,
+        content=(
+            f"🧑‍💼 **Atendimento Humano ASA Concluído**\n\n"
+            f"**Orientação do Atendente ({current_user.full_name}):**\n"
+            f"{case.resolution_notes}\n\n"
+            f"*Caso #{case.id} resolvido. Se precisar de mais esclarecimentos, continue sua conversa por aqui!*"
+        ),
+        is_abstained=False,
+        confidence_score=1.0,
+        source_citation=f"Atendimento Presencial/Online ASA · {current_user.full_name}",
+        suggested_action="Consulte seus protocolos ou serviços acadêmicos no app.",
+    )
+    db.add(attendant_msg)
+
+    # Atualiza a data da conversa para que fique no topo da lista do aluno
+    conversation = db.query(Conversation).filter(Conversation.id == case.conversation_id).first()
+    if conversation:
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.add(conversation)
 
     db.add(case)
     db.commit()

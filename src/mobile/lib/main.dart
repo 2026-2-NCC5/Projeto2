@@ -39,10 +39,23 @@ class AsaConnectApp extends StatelessWidget {
         return MaterialApp(
           title: 'ASA Connect+',
           debugShowCheckedModeBanner: false,
+          themeMode: accessibility.themeMode,
           theme: AppTheme.getLightTheme(
             fontScale: accessibility.fontScaleFactor,
             highContrast: accessibility.highContrast,
           ),
+          darkTheme: AppTheme.getDarkTheme(
+            fontScale: accessibility.fontScaleFactor,
+            highContrast: accessibility.highContrast,
+          ),
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(accessibility.fontScaleFactor),
+              ),
+              child: child!,
+            );
+          },
           home: const SplashScreen(),
         );
       },

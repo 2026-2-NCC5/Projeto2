@@ -45,9 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = auth.user;
     final isAttendantOrAdmin =
         user?.profileType == 'ATENDENTE_ASA' || user?.profileType == 'ADMINISTRADOR';
+    final isProfessor = user?.profileType == 'PROFESSOR';
 
     final List<Widget> tabs = [
-      _buildHomeContent(user, isAttendantOrAdmin),
+      _buildHomeContent(user, isAttendantOrAdmin, isProfessor),
       const ConversationsListScreen(isTab: true),
       const AcademicServicesScreen(isTab: true),
       const ProfileScreen(isTab: true),
@@ -67,16 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: AppColors.headerGreen),
               accountName: Text(
-                user?.fullName ?? 'Estudante Alvarista',
+                user?.fullName ?? (isProfessor ? 'Prof. Almeida' : 'Estudante Alvarista'),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              accountEmail: Text(user?.email ?? user?.ra ?? 'aluno@fecap.br'),
+              accountEmail: Text(user?.email ?? user?.ra ?? (isProfessor ? 'prof.almeida@fecap.br' : 'aluno@fecap.br')),
               currentAccountPicture: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/persona_aluna.png'),
+                  image: DecorationImage(
+                    image: AssetImage(isProfessor ? 'assets/images/persona_aluno.png' : 'assets/images/persona_aluna.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -177,8 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/images/persona_aluna.png'),
+                    image: DecorationImage(
+                      image: AssetImage(isProfessor ? 'assets/images/persona_aluno.png' : 'assets/images/persona_aluna.png'),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -254,8 +255,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeContent(user, bool isAttendantOrAdmin) {
-    final firstName = user?.fullName.split(' ').first ?? 'Aluno';
+  Widget _buildHomeContent(user, bool isAttendantOrAdmin, bool isProfessor) {
+    final firstName = user?.fullName.split(' ').first ?? (isProfessor ? 'Professor' : 'Aluno');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -292,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Olá, $firstName!',
+                      isProfessor ? 'Olá, Prof. $firstName!' : 'Olá, $firstName!',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -301,9 +302,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Como posso ajudar você hoje?',
-                      style: TextStyle(
+                    Text(
+                      isProfessor
+                          ? 'Portal de Apoio Docente e Atendimento ASA'
+                          : 'Como posso ajudar você hoje?',
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textBody,
@@ -340,13 +343,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextField(
                     controller: _searchController,
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                    decoration: const InputDecoration(
-                      hintText: 'Pergunte ao ASA Connect...',
-                      hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: isProfessor
+                          ? 'Pergunte sobre normas, diário, salas ou ASA...'
+                          : 'Pergunte ao ASA Connect...',
+                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onSubmitted: (val) {
                       if (val.trim().isNotEmpty) {
@@ -392,9 +397,9 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
 
           // 3. Seção: ACESSO RÁPIDO (Grade 2x2)
-          const Text(
-            'ACESSO RÁPIDO',
-            style: TextStyle(
+          Text(
+            isProfessor ? 'ACESSO RÁPIDO DOCENTE' : 'ACESSO RÁPIDO',
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
@@ -409,55 +414,108 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
             childAspectRatio: 1.25,
-            children: [
-              // 1. Documentos (Roxo #845EF2)
-              _buildOfficialQuickCard(
-                icon: Icons.description_outlined,
-                iconColor: AppColors.aiPurple,
-                iconBgColor: AppColors.aiPurple.withOpacity(0.12),
-                title: 'DOCUMENTOS',
-                subtitle: 'Histórico, Atestados',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                ),
-              ),
-              // 2. Requerimentos (Verde #02845E)
-              _buildOfficialQuickCard(
-                icon: Icons.assignment_outlined,
-                iconColor: AppColors.headerGreen,
-                iconBgColor: AppColors.headerGreen.withOpacity(0.12),
-                title: 'REQUERIMENTOS',
-                subtitle: 'Processos e Protocolos',
-                onTap: () => setState(() => _currentIndex = 2),
-              ),
-              // 3. Acadêmico (Verde Esmeralda #00E387)
-              _buildOfficialQuickCard(
-                icon: Icons.school_outlined,
-                iconColor: AppColors.headerGreen,
-                iconBgColor: AppColors.success.withOpacity(0.22),
-                title: 'ACADÊMICO',
-                subtitle: 'Matrícula, Notas',
-                onTap: () => setState(() => _currentIndex = 2),
-              ),
-              // 4. Financeiro (Amarelo Ouro #FFDE34)
-              _buildOfficialQuickCard(
-                icon: Icons.account_balance_wallet_outlined,
-                iconColor: const Color(0xFFB45309),
-                iconBgColor: AppColors.warningYellow.withOpacity(0.3),
-                title: 'FINANCEIRO',
-                subtitle: 'Boletos, Mensalidades',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                ),
-              ),
-            ],
+            children: isProfessor
+                ? [
+                    _buildOfficialQuickCard(
+                      icon: Icons.edit_note_rounded,
+                      iconColor: AppColors.aiPurple,
+                      iconBgColor: AppColors.aiPurple.withOpacity(0.12),
+                      title: 'DIÁRIO & NOTAS',
+                      subtitle: 'Lançamento e Prazos',
+                      onTap: () => _openChatWithQuery(
+                        'Como funciona e quais são os prazos para lançamento de notas e faltas no Portal do Professor da FECAP?',
+                      ),
+                    ),
+                    _buildOfficialQuickCard(
+                      icon: Icons.gavel_rounded,
+                      iconColor: AppColors.headerGreen,
+                      iconBgColor: AppColors.headerGreen.withOpacity(0.12),
+                      title: 'REGIMENTO FECAP',
+                      subtitle: 'Normas Acadêmicas',
+                      onTap: () => _openChatWithQuery(
+                        'Quais são as principais normas do Regimento Geral da FECAP sobre avaliações e conduta acadêmica?',
+                      ),
+                    ),
+                    _buildOfficialQuickCard(
+                      icon: Icons.devices_other_rounded,
+                      iconColor: const Color(0xFF02845E),
+                      iconBgColor: AppColors.success.withOpacity(0.22),
+                      title: 'TI & SALAS',
+                      subtitle: 'Projetores e Labs',
+                      onTap: () => _openChatWithQuery(
+                        'Como solicitar apoio técnico de TI para projetores, salas de aula e agendamento de laboratórios na FECAP?',
+                      ),
+                    ),
+                    _buildOfficialQuickCard(
+                      icon: Icons.support_agent_rounded,
+                      iconColor: const Color(0xFFB45309),
+                      iconBgColor: AppColors.warningYellow.withOpacity(0.3),
+                      title: 'CONTATO ASA',
+                      subtitle: 'Central de Apoio',
+                      onTap: () => _openChatWithQuery(
+                        'Como o professor entra em contato com o ASA para encaminhar solicitações ou dúvidas de alunos?',
+                      ),
+                    ),
+                  ]
+                : [
+                    // 1. Documentos (Roxo #845EF2)
+                    _buildOfficialQuickCard(
+                      icon: Icons.description_outlined,
+                      iconColor: AppColors.aiPurple,
+                      iconBgColor: AppColors.aiPurple.withOpacity(0.12),
+                      title: 'DOCUMENTOS',
+                      subtitle: 'Histórico, Atestados',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DocumentsScreen(initialCategory: 'Acadêmicos')),
+                      ),
+                    ),
+                    // 2. Requerimentos (Verde #02845E)
+                    _buildOfficialQuickCard(
+                      icon: Icons.assignment_outlined,
+                      iconColor: AppColors.headerGreen,
+                      iconBgColor: AppColors.headerGreen.withOpacity(0.12),
+                      title: 'REQUERIMENTOS',
+                      subtitle: 'Processos e Protocolos',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AcademicServicesScreen(filterCategory: 'Requerimentos'),
+                        ),
+                      ),
+                    ),
+                    // 3. Acadêmico (Verde Esmeralda #00E387)
+                    _buildOfficialQuickCard(
+                      icon: Icons.school_outlined,
+                      iconColor: AppColors.headerGreen,
+                      iconBgColor: AppColors.success.withOpacity(0.22),
+                      title: 'ACADÊMICO',
+                      subtitle: 'Matrícula, Notas',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AcademicServicesScreen(filterCategory: 'Matrícula'),
+                        ),
+                      ),
+                    ),
+                    // 4. Financeiro (Amarelo Ouro #FFDE34)
+                    _buildOfficialQuickCard(
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconColor: const Color(0xFFB45309),
+                      iconBgColor: AppColors.warningYellow.withOpacity(0.3),
+                      title: 'FINANCEIRO',
+                      subtitle: 'Boletos, Mensalidades',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AcademicServicesScreen(filterCategory: 'Financeiro'),
+                        ),
+                      ),
+                    ),
+                  ],
           ),
           const SizedBox(height: 24),
 
           // 4. Seção: PERGUNTAS FREQUENTES
-          const Text(
-            'PERGUNTAS FREQUENTES',
-            style: TextStyle(
+          Text(
+            isProfessor ? 'DÚVIDAS FREQUENTES DOCENTES' : 'PERGUNTAS FREQUENTES',
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
@@ -466,31 +524,57 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           Column(
-            children: [
-              _buildFaqQuestionCard(
-                question: 'Como solicitar um atestado de matrícula?',
-                badge: 'Acadêmico',
-                badgeBg: AppColors.headerGreen.withOpacity(0.1),
-                badgeColor: AppColors.headerGreen,
-                onTap: () => _openChatWithQuery('Como solicitar um atestado de matrícula?'),
-              ),
-              const SizedBox(height: 10),
-              _buildFaqQuestionCard(
-                question: 'Qual o prazo para entrega de horas complementares?',
-                badge: 'IA Assistente',
-                badgeBg: AppColors.aiPurple.withOpacity(0.1),
-                badgeColor: AppColors.aiPurple,
-                onTap: () => _openChatWithQuery('Qual o prazo para entrega de horas complementares?'),
-              ),
-              const SizedBox(height: 10),
-              _buildFaqQuestionCard(
-                question: 'Preciso da 2ª via do boleto deste mês.',
-                badge: 'Financeiro',
-                badgeBg: AppColors.warningYellow.withOpacity(0.25),
-                badgeColor: const Color(0xFFB45309),
-                onTap: () => _openChatWithQuery('Preciso da 2ª via do boleto deste mês.'),
-              ),
-            ],
+            children: isProfessor
+                ? [
+                    _buildFaqQuestionCard(
+                      question: 'Qual o prazo final para lançamento de notas e faltas do semestre?',
+                      badge: 'Docente',
+                      badgeBg: AppColors.headerGreen.withOpacity(0.1),
+                      badgeColor: AppColors.headerGreen,
+                      onTap: () => _openChatWithQuery('Qual o prazo final para lançamento de notas e faltas do semestre no Portal do Professor?'),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFaqQuestionCard(
+                      question: 'Como orientar pedidos de revisão de prova e abono de faltas?',
+                      badge: 'Acadêmico',
+                      badgeBg: AppColors.aiPurple.withOpacity(0.1),
+                      badgeColor: AppColors.aiPurple,
+                      onTap: () => _openChatWithQuery('Como o professor deve proceder em caso de revisão de prova solicitada pelo aluno?'),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFaqQuestionCard(
+                      question: 'Como reservar laboratório de informática ou equipamento multimídia?',
+                      badge: 'Suporte TI',
+                      badgeBg: AppColors.warningYellow.withOpacity(0.25),
+                      badgeColor: const Color(0xFFB45309),
+                      onTap: () => _openChatWithQuery('Como solicitar reserva de laboratório de informática para aulas na FECAP?'),
+                    ),
+                  ]
+                : [
+                    _buildFaqQuestionCard(
+                      question: 'Como solicitar um atestado de matrícula?',
+                      badge: 'Acadêmico',
+                      badgeBg: AppColors.headerGreen.withOpacity(0.1),
+                      badgeColor: AppColors.headerGreen,
+                      onTap: () => _openChatWithQuery('Como solicitar um atestado de matrícula?'),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFaqQuestionCard(
+                      question: 'Qual o prazo para entrega de horas complementares?',
+                      badge: 'IA Assistente',
+                      badgeBg: AppColors.aiPurple.withOpacity(0.1),
+                      badgeColor: AppColors.aiPurple,
+                      onTap: () => _openChatWithQuery('Qual o prazo para entrega de horas complementares?'),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFaqQuestionCard(
+                      question: 'Preciso da 2ª via do boleto deste mês.',
+                      badge: 'Financeiro',
+                      badgeBg: AppColors.warningYellow.withOpacity(0.25),
+                      badgeColor: const Color(0xFFB45309),
+                      onTap: () => _openChatWithQuery('Preciso da 2ª via do boleto deste mês.'),
+                    ),
+                  ],
           ),
           const SizedBox(height: 24),
         ],

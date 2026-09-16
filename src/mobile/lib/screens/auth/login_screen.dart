@@ -5,6 +5,7 @@ import 'package:asa_connect/widgets/common/brand_header.dart';
 import 'package:asa_connect/state/auth_provider.dart';
 import 'package:asa_connect/screens/auth/recovery_screen.dart';
 import 'package:asa_connect/screens/home/home_screen.dart';
+import 'package:asa_connect/screens/profile_selection/profile_selection_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String selectedProfile;
@@ -17,9 +18,29 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController(text: '123456');
-  final _passwordController = TextEditingController(text: 'senha123');
+  late final TextEditingController _identifierController;
+  late final TextEditingController _passwordController;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    String defaultId = '123456';
+    String defaultPwd = 'senha123';
+
+    if (widget.selectedProfile == 'PROFESSOR') {
+      defaultId = 'prof.almeida@fecap.br';
+    } else if (widget.selectedProfile == 'ATENDENTE' || widget.selectedProfile == 'ATENDENTE_ASA') {
+      defaultId = 'atendente@fecap.br';
+    } else if (widget.selectedProfile == 'COLABORADOR' || widget.selectedProfile == 'ADMINISTRADOR') {
+      defaultId = 'admin@fecap.br';
+    } else if (widget.selectedProfile == 'RESPONSAVEL') {
+      defaultId = 'responsavel@fecap.br';
+    }
+
+    _identifierController = TextEditingController(text: defaultId);
+    _passwordController = TextEditingController(text: defaultPwd);
+  }
 
   @override
   void dispose() {
@@ -33,6 +54,78 @@ class _LoginScreenState extends State<LoginScreen> {
       _identifierController.text = id;
       _passwordController.text = pwd;
     });
+  }
+
+  void _handleBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ProfileSelectionScreen()),
+      );
+    }
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.headset_mic_rounded, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Canais de Atendimento ASA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Problemas para acessar o aplicativo ou recuperar suas credenciais?',
+              style: TextStyle(fontSize: 12, color: AppColors.textBody, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+            _buildSupportItem(Icons.chat_bubble_outline_rounded, 'WhatsApp Oficial:', '(11) 3272-2222'),
+            _buildSupportItem(Icons.email_outlined, 'E-mail:', 'asa@fecap.br'),
+            _buildSupportItem(Icons.access_time_rounded, 'Horário:', 'Seg a Sex das 08h às 21h'),
+            _buildSupportItem(Icons.location_on_outlined, 'Local:', 'Campus Liberdade – Bloco A (Térreo)'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupportItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primaryGreen),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                children: [
+                  TextSpan(text: '$label ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _submitLogin() async {
@@ -63,43 +156,49 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.headerGreen,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            children: [
-              // Botão Voltar ao Perfil Selecionado (igual LoginScreen.tsx)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.selectedProfile.toLowerCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.headerGreen,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: Column(
+              children: [
+                // Botão Voltar ao Perfil Selecionado com navegação segura
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: _handleBack,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.selectedProfile.toLowerCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
               const AsaLogo(width: 200, isDarkBackground: true),
               const SizedBox(height: 24),
 
@@ -248,22 +347,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        alignment: WrapAlignment.center,
                         children: [
                           ActionChip(
-                            label: const Text('Aluno 123456',
-                                style: TextStyle(fontSize: 10)),
+                            label: const Text('Aluno 123456', style: TextStyle(fontSize: 10)),
                             backgroundColor: const Color(0xFFF1F5F9),
                             onPressed: () => _fillCredentials('123456', 'senha123'),
                           ),
-                          const SizedBox(width: 6),
                           ActionChip(
-                            label: const Text('Atendente ASA',
-                                style: TextStyle(fontSize: 10)),
+                            label: const Text('Prof. Almeida', style: TextStyle(fontSize: 10)),
                             backgroundColor: const Color(0xFFF1F5F9),
-                            onPressed: () =>
-                                _fillCredentials('atendente@fecap.br', 'senha123'),
+                            onPressed: () => _fillCredentials('prof.almeida@fecap.br', 'senha123'),
+                          ),
+                          ActionChip(
+                            label: const Text('Atendente ASA', style: TextStyle(fontSize: 10)),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            onPressed: () => _fillCredentials('atendente@fecap.br', 'senha123'),
+                          ),
+                          ActionChip(
+                            label: const Text('Admin', style: TextStyle(fontSize: 10)),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            onPressed: () => _fillCredentials('admin@fecap.br', 'senha123'),
                           ),
                         ],
                       ),
@@ -273,7 +380,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       Center(
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: _showSupportDialog,
                           child: const Text(
                             'Problemas com o acesso? Fale com o Suporte',
                             textAlign: TextAlign.center,
@@ -305,6 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

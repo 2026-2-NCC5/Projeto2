@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:asa_connect/core/constants.dart';
+import 'package:asa_connect/models/conversation.dart';
 import 'package:asa_connect/state/chat_provider.dart';
 import 'package:asa_connect/screens/chat/chat_screen.dart';
 
@@ -36,11 +37,49 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
     final allConversations = chatProvider.conversations;
-    final conversations = allConversations.where((c) {
-      if (_filter.isEmpty) return true;
-      return c.title.toLowerCase().contains(_filter.toLowerCase()) ||
-          (c.lastMessage?.toLowerCase().contains(_filter.toLowerCase()) ?? false);
-    }).toList();
+
+    final List<ConversationModel> conversations;
+    if (_filter.trim().isEmpty) {
+      conversations = List.from(allConversations)
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    } else {
+      final q = _filter.trim().toLowerCase();
+      final scoredList = <MapEntry<ConversationModel, int>>[];
+
+      for (final c in allConversations) {
+        final title = c.title.toLowerCase();
+        final lastMsg = (c.lastMessage ?? '').toLowerCase();
+
+        int score = 0;
+        if (title == q) {
+          score += 100;
+        } else if (title.startsWith(q)) {
+          score += 70;
+        } else if (title.split(' ').any((w) => w.startsWith(q))) {
+          score += 50;
+        } else if (title.contains(q)) {
+          score += 30;
+        }
+
+        if (lastMsg.startsWith(q)) {
+          score += 20;
+        } else if (lastMsg.contains(q)) {
+          score += 10;
+        }
+
+        if (score > 0) {
+          scoredList.add(MapEntry(c, score));
+        }
+      }
+
+      scoredList.sort((a, b) {
+        final cmp = b.value.compareTo(a.value);
+        if (cmp != 0) return cmp;
+        return b.key.updatedAt.compareTo(a.key.updatedAt);
+      });
+
+      conversations = scoredList.map((e) => e.key).toList();
+    }
 
     final content = Column(
       children: [

@@ -7,8 +7,9 @@ import 'package:asa_connect/state/chat_provider.dart';
 
 class DocumentsScreen extends StatefulWidget {
   final bool isTab;
+  final String? initialCategory;
 
-  const DocumentsScreen({super.key, this.isTab = false});
+  const DocumentsScreen({super.key, this.isTab = false, this.initialCategory});
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -48,8 +49,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Future<void> _pickFile() async {
     try {
       setState(() => _isUploading = true);
-      // Simulação de upload de arquivo ou uso de file_picker
-      await Future.delayed(const Duration(milliseconds: 1200));
+      await Future.delayed(const Duration(milliseconds: 1300));
       setState(() {
         _isUploading = false;
         _uploadSuccessMessage = "Arquivo 'Comprovante_Matricula_2024.pdf' analisado com sucesso pela IA do ASA Connect!";
@@ -60,15 +60,224 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           'size': '1.2 MB',
         });
       });
+      if (mounted) {
+        _showAnalysisModal('Comprovante_Matricula_2024.pdf');
+      }
     } catch (_) {
       setState(() => _isUploading = false);
     }
   }
 
+  void _showAnalysisModal(String filename) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentMint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryGreen, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Análise Inteligente de Documento',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                      ),
+                      Text(
+                        'Processado pelo motor RAG do ASA Connect',
+                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildAnalysisRow('Arquivo:', filename),
+                  _buildAnalysisRow('Tipo Detectado:', 'Comprovante Oficial de Matrícula Regular'),
+                  _buildAnalysisRow('Estudante:', 'Lucas Alvarista Silva (RA: 123456)'),
+                  _buildAnalysisRow('Semestre Letivo:', '2024.1 - Ciência da Computação (5º Semestre)'),
+                  _buildAnalysisRow('Autenticação Digital:', 'Chave SHA256 FECAP Verificada ✓'),
+                  _buildAnalysisRow('Validade Jurídica:', 'Válido para estágio, passe escolar e benefícios.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                label: const Text('Tirar dúvidas com o ASA sobre este documento', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+                  chatProvider.startNewChat();
+                  chatProvider.sendMessage('Acabei de enviar o documento $filename. Gostaria de entender quais procedimentos e prazos acadêmicos oficiais posso realizar com ele na FECAP.');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ChatScreen()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAllDocumentsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        maxChildSize: 0.92,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Todos os Documentos',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  itemCount: _recentFiles.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final file = _recentFiles[index];
+                    return ListTile(
+                      tileColor: const Color(0xFFF8FAFC),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: const BorderSide(color: AppColors.borderLight),
+                      ),
+                      leading: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.headerGreen, size: 28),
+                      title: Text(file['name']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: Text('${file['category']} · ${file['date']} · ${file['size']}', style: const TextStyle(fontSize: 11)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.download_rounded, color: AppColors.headerGreen),
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          _downloadFile(file['name']!);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _downloadFile(String filename) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Download concluído: $filename salvo com sucesso.')),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   void _askAboutCategory(String category) {
+    String query;
+    if (category.contains('Acadêmico')) {
+      query = 'Como emitir atestado de matrícula, histórico escolar ou outros documentos acadêmicos na FECAP?';
+    } else if (category.contains('Financeiro')) {
+      query = 'Como emitir 2ª via de boleto, comprovante de pagamento ou informe de rendimentos para Imposto de Renda na FECAP?';
+    } else if (category.contains('Estágio') || category.contains('TCE')) {
+      query = 'Quais são as regras, prazos e como validar o Termo de Compromisso de Estágio (TCE) e relatórios na FECAP?';
+    } else {
+      query = 'Como abrir e acompanhar requerimentos e protocolos de processos acadêmicos na FECAP?';
+    }
+
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.startNewChat();
-    chatProvider.sendMessage("Quais documentos e procedimentos oficiais existem na categoria $category?");
+    chatProvider.sendMessage(query);
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ChatScreen()),
     );
@@ -225,7 +434,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: _showAllDocumentsModal,
                 child: const Text('VER TODOS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
               ),
             ],
@@ -292,14 +501,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                         IconButton(
                           icon: const Icon(Icons.download_rounded, color: AppColors.headerGreen, size: 20),
                           tooltip: 'Baixar Documento',
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Download de ${file['name']} iniciado.'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          },
+                          onPressed: () => _downloadFile(file['name']!),
                         ),
                       ],
                     ),
@@ -322,7 +524,22 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         backgroundColor: AppColors.headerGreen,
         title: const Text('Documentos', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         actions: [
-          IconButton(icon: const Icon(Icons.more_vert_rounded), onPressed: () {}),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+            onSelected: (val) {
+              if (val == 'all') {
+                _showAllDocumentsModal();
+              } else if (val == 'refresh') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Lista de documentos atualizada.'), backgroundColor: AppColors.success),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'all', child: Text('Ver Todos os Documentos')),
+              const PopupMenuItem(value: 'refresh', child: Text('Atualizar Lista')),
+            ],
+          ),
         ],
       ),
       body: body,

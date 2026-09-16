@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:asa_connect/core/constants.dart';
 import 'package:asa_connect/state/auth_provider.dart';
 import 'package:asa_connect/state/accessibility_provider.dart';
-import 'package:asa_connect/screens/auth/login_screen.dart';
+import 'package:asa_connect/screens/profile_selection/profile_selection_screen.dart';
 import 'package:asa_connect/screens/documents/documents_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,6 +17,255 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notifications = true;
+
+  void _showThemeDialog() {
+    final access = Provider.of<AccessibilityProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final current = access.themeMode;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Aparência e Tema',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Escolha a paleta de cores para o aplicativo. A alteração é persistida automaticamente.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 16),
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.light,
+                  groupValue: current,
+                  activeColor: AppColors.primaryGreen,
+                  title: const Text('Tema Claro', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Fundo claro padrão institucional', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  onChanged: (val) {
+                    if (val != null) {
+                      access.setThemeMode(val);
+                      setModalState(() {});
+                    }
+                  },
+                ),
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.dark,
+                  groupValue: current,
+                  activeColor: AppColors.primaryGreen,
+                  title: const Text('Tema Escuro', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Tons escuros e alto contraste para ambientes com pouca luz', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  onChanged: (val) {
+                    if (val != null) {
+                      access.setThemeMode(val);
+                      setModalState(() {});
+                    }
+                  },
+                ),
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.system,
+                  groupValue: current,
+                  activeColor: AppColors.primaryGreen,
+                  title: const Text('Padrão do Sistema', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Acompanha a configuração do seu dispositivo Android', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  onChanged: (val) {
+                    if (val != null) {
+                      access.setThemeMode(val);
+                      setModalState(() {});
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showPhotoSyncDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.camera_alt_rounded, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Foto de Perfil', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Foto Institucional Sincronizada',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Sua foto de identificação acadêmica é vinculada diretamente à matrícula na Secretaria Geral da FECAP.\n\n'
+              'Para atualização de foto cadastral ou emissão de nova carteirinha, procure o atendimento presencial do ASA no Campus Liberdade.',
+              style: TextStyle(fontSize: 12, color: AppColors.textBody, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutAsaDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.accentMint,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.school_rounded, color: AppColors.primaryGreen, size: 20),
+            ),
+            const SizedBox(width: 10),
+            const Text('Sobre o ASA Connect+', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Versão 1.0.0 Release (Ambiente FECAP)',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'O ASA Connect+ é uma plataforma de atendimento inteligente baseada em IA e Recuperação Aumentada por Geração (RAG), concebida para atender os estudantes e o corpo docente Alvarista com máxima confiabilidade, transparência e velocidade.',
+                style: TextStyle(fontSize: 12, color: AppColors.textBody, height: 1.4),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Pilares de Governança e Qualidade:',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• Limiar de Confiança e Abstenção Ética (RF04)\n'
+                '• Explicabilidade e Citação de Fontes Oficiais (RF06)\n'
+                '• Escalonamento Integrado para a Fila Humana do ASA (RF08)\n'
+                '• Acessibilidade Universal e Tema Personalizável',
+                style: TextStyle(fontSize: 11, color: AppColors.textMuted, height: 1.4),
+              ),
+              SizedBox(height: 14),
+              Text(
+                'Desenvolvimento: Projeto Interdisciplinar • Ciência da Computação\nCentro Universitário FECAP • 2024',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.support_agent_rounded, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Atendimento ASA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Canais Oficiais de Atendimento ao Aluno (ASA):',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            ),
+            const SizedBox(height: 12),
+            _buildSupportChannel(Icons.phone_android_rounded, 'WhatsApp Oficial', '(11) 3272-2222'),
+            _buildSupportChannel(Icons.email_outlined, 'E-mail do ASA', 'asa@fecap.br'),
+            _buildSupportChannel(Icons.access_time_rounded, 'Horário de Atendimento', 'Segunda a Sexta, 08h às 21h'),
+            _buildSupportChannel(Icons.location_on_outlined, 'Localização Presencial', 'Campus Liberdade • Bloco B • Térreo'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupportChannel(IconData icon, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppColors.primaryGreen),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showFontSizeDialog() {
     final access = Provider.of<AccessibilityProvider>(context, listen: false);
@@ -212,42 +461,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.headerGreen, width: 2.5),
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/persona_aluna.png',
-                          fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: _showPhotoSyncDialog,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.headerGreen, width: 2.5),
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            user?.profileType == 'PROFESSOR'
+                                ? 'assets/images/persona_aluno.png'
+                                : 'assets/images/persona_aluna.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        color: AppColors.headerGreen,
-                        shape: BoxShape.circle,
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                          color: AppColors.headerGreen,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 13),
                       ),
-                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 13),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  user?.fullName ?? 'Nome do Aluno',
+                  user?.fullName ?? (user?.profileType == 'PROFESSOR' ? 'Prof. Almeida' : 'Nome do Aluno'),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'RA: ${user?.ra ?? "123456"}',
+                  'RA / Matrícula: ${user?.ra ?? (user?.profileType == 'PROFESSOR' ? 'DOC-4481' : '123456')}',
                   style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 8),
@@ -302,8 +556,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildMenuTile(
             icon: Icons.dark_mode_outlined,
             title: 'Aparência',
-            trailingText: 'Sistema',
-            onTap: () {},
+            trailingText: access.themeModeName,
+            onTap: _showThemeDialog,
           ),
           const SizedBox(height: 16),
 
@@ -327,20 +581,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildSectionHeader('INSTITUCIONAL'),
           _buildMenuTile(
             icon: Icons.info_outline_rounded,
-            title: 'Sobre o ASA Connect',
-            onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'ASA Connect+',
-                applicationVersion: '1.0.0 (5º Semestre CC FECAP)',
-                applicationLegalese: 'Projeto Interdisciplinar – Agente Inteligente para o Estudante Alvarista',
-              );
-            },
+            title: 'Sobre o ASA Connect+',
+            onTap: _showAboutAsaDialog,
           ),
           _buildMenuTile(
             icon: Icons.help_outline_rounded,
             title: 'Ajuda e Suporte',
-            onTap: () {},
+            onTap: _showSupportDialog,
           ),
           _buildMenuTile(
             icon: Icons.privacy_tip_outlined,
@@ -366,7 +613,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await auth.logout();
                 if (!context.mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const ProfileSelectionScreen()),
                   (route) => false,
                 );
               },
