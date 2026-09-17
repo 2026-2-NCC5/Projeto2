@@ -21,12 +21,14 @@ Diretrizes Obrigatórias:
 def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[str]:
     """Chama a API do Google Gemini via HTTP REST com fallback automático de modelos."""
     models_to_try = [
-        getattr(settings, "LLM_MODEL", None) or "gemini-3.1-flash-lite",
-        "gemini-2.5-flash-lite",
+        getattr(settings, "LLM_MODEL", None) or "gemini-flash-lite-latest",
+        "gemini-flash-lite-latest",
+        "gemini-3.1-flash-lite",
         "gemini-flash-latest",
+        "gemini-2.5-flash-lite",
         "gemini-3.6-flash",
     ]
-    models_to_try = list(dict.fromkeys(models_to_try))
+    models_to_try = list(dict.fromkeys([m for m in models_to_try if m]))
 
     payload = {
         "contents": [
@@ -52,8 +54,13 @@ def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[st
                 resp = client.post(url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
-                    text = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return text.strip()
+                    candidates = data.get("candidates", [])
+                    if candidates and candidates[0].get("content", {}).get("parts"):
+                        text = candidates[0]["content"]["parts"][0].get("text", "")
+                        clean_text = text.strip()
+                        # Validação de integridade: não aceita fragmentos interrompidos
+                        if len(clean_text) >= 80 and not clean_text.endswith(("**", "R$", "em:", "no: ")):
+                            return clean_text
         except Exception:
             continue
     return None
@@ -199,36 +206,65 @@ def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
 
     parts = [intro, ""]
 
-    # Conteúdo principal explicativo
-    primary = desc_text or main_body or clean_markdown_snippet(top_chunk["content"])
+    # Conteúdo principal explicativo com busca resiliente
+    primary = desc_text or main_body
+    if not primary:
+        for c in chunks_from_top_doc:
+            cl = clean_markdown_snippet(c["content"])
+            if cl and len(cl) >= 30:
+                primary = cl
+                break
+
+    if not primary:
+        for c in valid_chunks:
+            cl = clean_markdown_snippet(c["content"])
+            if cl and len(cl) >= 30:
+                primary = cl
+                break
+
+    if not primary and top_chunk.get("content"):
+        cl = clean_markdown_snippet(top_chunk["content"])
+        if cl and len(cl) >= 15:
+            primary = cl
+
     if primary:
         parts.append(primary)
         parts.append("")
 
-    # Apenas inclui Passo a Passo se a pergunta pedir procedimento ou se for serviço direto
-    if is_procedural and steps_text and steps_text != primary:
+    # Sempre inclui Passo a Passo se disponível e não redundante
+    if steps_text and steps_text != primary:
         parts.append("**Passo a passo no Portal do Aluno:**")
         parts.append(steps_text)
+        parts.append("")
+
+    # Sempre inclui Prazos e Condições se disponível e não redundante
+    if prazos_text and prazos_text != primary and prazos_text != steps_text:
+        parts.append("**Prazos e Condições Importantes:**")
+        parts.append(prazos_text)
         parts.append("")
 
     # Busca detalhes complementares (prazos específicos de 2026, regras adicionais)
     extra_details = []
     for c in valid_chunks:
         c_text = clean_markdown_snippet(c["content"])
-        if not c_text or c_text == primary or c_text == steps_text:
+        if not c_text or c_text == primary or c_text == steps_text or c_text == prazos_text:
             continue
         if any(term in c_text.lower() for term in ["2026", "semestre de 2026", "veteranos", "75%", "r$5", "r$ 5"]):
             if c_text not in extra_details and len(c_text) < 500:
                 extra_details.append(c_text)
 
     if extra_details:
-        parts.append("**Informações Importantes:**")
+        parts.append("**Informações Complementares:**")
         for extra in extra_details[:1]:
             parts.append(extra)
             parts.append("")
-    elif prazos_text and prazos_text != primary and prazos_text != steps_text and ("prazo" in q_low or "taxa" in q_low or "custo" in q_low):
-        parts.append("**Prazos e Condições:**")
-        parts.append(prazos_text)
+
+    # Se mesmo assim o corpo ficou sem explicações (apenas saudação), insere orientação segura de atendimento:
+    if len(parts) <= 2:
+        parts.append(
+            f"Para solicitar ou consultar orientações sobre **{doc_title}**, acesse o Portal do Aluno "
+            f"(Menu > Requerimentos) ou dirija-se ao balcão de atendimento da Área do Sucesso Alvarista (ASA) no Campus Liberdade."
+        )
         parts.append("")
 
     parts.append("Se precisar de mais alguma orientação, estou à disposição para ajudar!")

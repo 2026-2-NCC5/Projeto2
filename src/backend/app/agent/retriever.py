@@ -52,7 +52,22 @@ class KnowledgeRetriever:
     Gerenciador da Base de Conhecimento e Indexação Vetorial do ASA Connect.
     """
     def __init__(self, kb_dir: Optional[str] = None):
-        self.kb_dir = kb_dir or settings.KNOWLEDGE_BASE_DIR
+        # Resolve kb_dir procurando nos caminhos candidatos válidos
+        candidates = [
+            kb_dir,
+            settings.KNOWLEDGE_BASE_DIR,
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "knowledge_base")),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "knowledge_base")),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "knowledge_base")),
+            os.path.abspath(os.path.join(os.getcwd(), "knowledge_base")),
+            os.path.abspath(os.path.join(os.getcwd(), "..", "knowledge_base")),
+        ]
+        resolved_kb_dir = kb_dir or settings.KNOWLEDGE_BASE_DIR
+        for cand in candidates:
+            if cand and os.path.isdir(cand):
+                resolved_kb_dir = cand
+                break
+        self.kb_dir = resolved_kb_dir
         self.vectorizer = TextVectorizer()
         self.chunks: List[Chunk] = []
         self.chunk_vectors = None
@@ -121,12 +136,28 @@ class KnowledgeRetriever:
             cleaned = re.sub(r"[^\w\s\-\(\)\/\.\,Á-ú]", "", sec).strip()
             return cleaned if cleaned else "Procedimento Geral"
 
+        def has_substantive_content(text: str) -> bool:
+            """Verifica se o texto possui conteúdo informativo além de meros metadados de cabeçalho."""
+            t = text
+            t = re.sub(r'Palavras-chave:.*', '', t, flags=re.IGNORECASE)
+            t = re.sub(r'\*\*Fonte Oficial:\*\*.*', '', t)
+            t = re.sub(r'\*\*Categoria:\*\*.*', '', t)
+            t = re.sub(r'\*\*Setor Responsável:\*\*.*', '', t)
+            t = re.sub(r'\*\*Local de Atendimento:\*\*.*', '', t)
+            t = re.sub(r'\*\*Horário:\*\*.*', '', t)
+            t = re.sub(r'\*\*Área do Sucesso Alvarista.*?\n', '', t)
+            t = re.sub(r'\*\*Fale Conosco.*?\n', '', t)
+            t = re.sub(r'\*\*Portal Institucional.*?\n', '', t)
+            t = re.sub(r'#+.*', '', t)
+            t = re.sub(r'[\-\=\_\*]', '', t)
+            return len(t.strip()) >= 35
+
         for part in splits:
             part = part.strip()
             if not part:
                 continue
             if part.startswith("#"):
-                if current_text:
+                if current_text and has_substantive_content(current_text):
                     full_content = current_text
                     if keywords_text:
                         full_content += f"\n\nPalavras-chave: {keywords_text}"
@@ -144,6 +175,9 @@ class KnowledgeRetriever:
                         )
                     )
                     current_text = ""
+                elif current_text:
+                    # Descarta blocos que contêm apenas metadados ou separadores para evitar chunks ocos
+                    current_text = ""
                 current_section = part.lstrip("#").strip()
             else:
                 if current_text:
@@ -151,7 +185,7 @@ class KnowledgeRetriever:
                 else:
                     current_text = part
 
-        if current_text:
+        if current_text and has_substantive_content(current_text):
             full_content = current_text
             if keywords_text:
                 full_content += f"\n\nPalavras-chave: {keywords_text}"
@@ -165,6 +199,22 @@ class KnowledgeRetriever:
                     updated_at=updated_at,
                     category=category,
                     content=full_content,
+                    file_path=file_path,
+                )
+            )
+
+        # Fallback de segurança: se após o filtro nenhum chunk foi criado mas o corpo tem texto, cria um chunk completo
+        if not chunks and body.strip():
+            chunks.append(
+                Chunk(
+                    document_slug=slug,
+                    document_title=title,
+                    official_source=source,
+                    section=clean_section_name(default_section),
+                    version=version,
+                    updated_at=updated_at,
+                    category=category,
+                    content=body.strip(),
                     file_path=file_path,
                 )
             )

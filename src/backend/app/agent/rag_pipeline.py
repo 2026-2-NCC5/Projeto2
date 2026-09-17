@@ -92,12 +92,23 @@ class RAGPipeline:
             suggested_action = "Envie o TCE assinado via Portal do Aluno > Documentos > Estágio."
         elif "biblioteca" in q_low or "livro" in q_low or "multa" in q_low:
             suggested_action = "Acesse o Catálogo Online da Biblioteca Paulo Ernesto Tolle para renovações e reservas."
-        elif "transferencia" in q_low or "turno" in q_low:
-            suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Transferência de Turno."
+        elif "transferencia" in q_low or "transferência" in q_low or "transferencia" in slug_low:
+            if "curso" in q_low or "curso" in slug_low:
+                suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Transferência Interna de Curso."
+            elif "turno" in q_low or "turno" in slug_low:
+                suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Transferência de Turno."
+            elif "externa" in q_low or "externa" in slug_low:
+                suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Transferência Externa."
+            else:
+                suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Solicitação de Transferência."
         elif "falta" in q_low or "abono" in q_low:
             suggested_action = "Solicite em Portal do Aluno > Requerimentos > Compensação de Faltas (em até 5 dias)."
         elif "substitutiva" in q_low or "prova" in q_low:
             suggested_action = "Solicite a Avaliação Substitutiva via Portal do Aluno > Requerimentos no período do calendário oficial."
+        elif "dp" in q_low or "dependencia" in q_low:
+            suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Solicitação de DP."
+        elif "trancamento" in q_low or "cancelamento" in q_low:
+            suggested_action = "Abra o requerimento em Portal do Aluno > Requerimentos > Trancamento de Matrícula."
         else:
             suggested_action = f"Acesse o Portal do Aluno na seção '{top_chunk.get('category', 'Serviços')}' para prosseguir."
 

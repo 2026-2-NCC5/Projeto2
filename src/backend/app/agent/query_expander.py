@@ -56,6 +56,16 @@ class QueryExpander:
             "category": "Secretaria",
         },
         {
+            "id": "colaplagio_conduta",
+            "triggers": [
+                r"colando", r"colar", r"\bcola\b", r"plagio", r"copiar trabalho",
+                r"fraude", r"desonestidade", r"pego colando", r"cola na prova"
+            ],
+            "canonical_terms": "cola plagio codigo de etica regras de conduta integridade honestidade reprovacao comissao de etica nota zero prova",
+            "boost_keywords": ["cola", "plagio", "etica", "conduta", "integridade", "reprovacao"],
+            "category": "Regimento",
+        },
+        {
             "id": "criterios_aprovacao",
             "triggers": [
                 r"media minima", r"media para passar", r"nota para passar",
@@ -115,6 +125,16 @@ class QueryExpander:
             "canonical_terms": "biblioteca paulo ernesto tolle multa diaria atraso devolucao catalogo emprestimo",
             "boost_keywords": ["biblioteca", "multa", "livro"],
             "category": "Biblioteca",
+        },
+        {
+            "id": "transferencia_curso",
+            "triggers": [
+                r"transferencia interna", r"transferencia de curso", r"mudar de curso",
+                r"trocar de curso", r"transferencia interna de curso", r"mudanca de curso"
+            ],
+            "canonical_terms": "transferencia interna de curso requerimento portal do aluno prazos aproveitamento grade veteranos ingressantes bolsistas prouni",
+            "boost_keywords": ["transferencia", "interna", "curso"],
+            "category": "Secretaria",
         },
         {
             "id": "transferencia_turno",
