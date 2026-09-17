@@ -19,9 +19,15 @@ Diretrizes Obrigatórias:
 
 
 def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[str]:
-    """Chama a API do Google Gemini via HTTP REST de forma leve e rápida."""
-    model = settings.LLM_MODEL or "gemini-2.0-flash"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    """Chama a API do Google Gemini via HTTP REST com fallback automático de modelos."""
+    models_to_try = [
+        getattr(settings, "LLM_MODEL", None) or "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+        "gemini-flash-latest",
+        "gemini-3.6-flash",
+    ]
+    models_to_try = list(dict.fromkeys(models_to_try))
+
     payload = {
         "contents": [
             {
@@ -38,15 +44,18 @@ def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[st
             "maxOutputTokens": 800,
         }
     }
-    try:
-        with httpx.Client(timeout=6.0) as client:
-            resp = client.post(url, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return text.strip()
-    except Exception:
-        pass
+
+    for model in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    return text.strip()
+        except Exception:
+            continue
     return None
 
 

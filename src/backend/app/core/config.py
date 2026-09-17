@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 horas
 
     # RAG Configurações (RF04)
-    RAG_CONFIDENCE_THRESHOLD: float = 0.60
+    RAG_CONFIDENCE_THRESHOLD: float = 0.48
     RAG_MAX_CHUNKS: int = 3
     RAG_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     KNOWLEDGE_BASE_DIR: str = (

@@ -72,7 +72,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -87,29 +87,33 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.accentMint,
+                    color: context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryGreen, size: 22),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Análise Inteligente de Documento',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                       ),
                       Text(
                         'Processado pelo motor RAG do ASA Connect',
-                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: Icon(Icons.close_rounded, size: 20, color: context.primaryTextColor),
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ],
@@ -118,9 +122,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: context.inputFillColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderLight),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,10 +175,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         children: [
           SizedBox(
             width: 130,
-            child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+            child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.secondaryTextColor)),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+            child: Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
           ),
         ],
       ),
@@ -185,7 +189,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -202,12 +206,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Todos os Documentos',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded, color: context.primaryTextColor),
                     onPressed: () => Navigator.of(ctx).pop(),
                   ),
                 ],
@@ -221,16 +225,29 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   itemBuilder: (context, index) {
                     final file = _recentFiles[index];
                     return ListTile(
-                      tileColor: const Color(0xFFF8FAFC),
+                      tileColor: context.inputFillColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: AppColors.borderLight),
+                        side: BorderSide(color: context.borderColor),
                       ),
-                      leading: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.headerGreen, size: 28),
-                      title: Text(file['name']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      subtitle: Text('${file['category']} · ${file['date']} · ${file['size']}', style: const TextStyle(fontSize: 11)),
+                      leading: Icon(
+                        Icons.picture_as_pdf_rounded,
+                        color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.headerGreen,
+                        size: 28,
+                      ),
+                      title: Text(
+                        file['name']!,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.primaryTextColor),
+                      ),
+                      subtitle: Text(
+                        '${file['category']} · ${file['date']} · ${file['size']}',
+                        style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                      ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.download_rounded, color: AppColors.headerGreen),
+                        icon: Icon(
+                          Icons.download_rounded,
+                          color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.headerGreen,
+                        ),
                         onPressed: () {
                           Navigator.of(ctx).pop();
                           _downloadFile(file['name']!);
@@ -291,9 +308,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Seção Categorias (Figma tela 6)
-          const Text(
+          Text(
             'Categorias',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.primaryTextColor),
           ),
           const SizedBox(height: 12),
 
@@ -336,20 +353,24 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           // Seção "Enviar para Análise AI"
           Row(
             children: [
-              const Text(
+              Text(
                 'Enviar para Análise AI',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.primaryTextColor),
               ),
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.accentMint,
+                  color: context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
+                child: Text(
                   'IA',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                  ),
                 ),
               ),
             ],
@@ -360,32 +381,36 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: Column(
               children: [
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentMint,
+                  decoration: BoxDecoration(
+                    color: context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint,
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child: Icon(Icons.cloud_upload_outlined, color: AppColors.primaryGreen, size: 24),
+                  child: Center(
+                    child: Icon(
+                      Icons.cloud_upload_outlined,
+                      color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                      size: 24,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Selecione ou arraste um arquivo',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'PDF, DOCX ou JPG até 10MB',
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
                 ),
                 const SizedBox(height: 16),
 
@@ -393,13 +418,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.accentMint,
+                      color: context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       _uploadSuccessMessage!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 11, color: AppColors.primaryGreen, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -429,9 +458,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Recentes',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.primaryTextColor),
               ),
               TextButton(
                 onPressed: _showAllDocumentsModal,
@@ -449,7 +478,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             itemBuilder: (context, index) {
               final file = _recentFiles[index];
               return Material(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
                   onTap: () {
@@ -467,17 +496,23 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.borderLight),
+                      border: Border.all(color: context.borderColor),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.headerGreen.withValues(alpha: 0.1),
+                            color: context.isDarkMode
+                                ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                                : AppColors.headerGreen.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.headerGreen, size: 20),
+                          child: Icon(
+                            Icons.picture_as_pdf_rounded,
+                            color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.headerGreen,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -488,18 +523,22 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                                 file['name']!,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.primaryTextColor),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 '${file['category']} • ${file['date']} • ${file['size']}',
-                                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.download_rounded, color: AppColors.headerGreen, size: 20),
+                          icon: Icon(
+                            Icons.download_rounded,
+                            color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.headerGreen,
+                            size: 20,
+                          ),
                           tooltip: 'Baixar Documento',
                           onPressed: () => _downloadFile(file['name']!),
                         ),
@@ -518,10 +557,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (widget.isTab) return body;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: AppColors.headerGreen,
+        backgroundColor: context.headerColor,
         title: const Text('Documentos', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         actions: [
           PopupMenuButton<String>(
@@ -553,7 +592,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: context.cardColor,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -562,17 +601,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderLight),
+            border: Border.all(color: context.borderColor),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.aiPurple.withValues(alpha: 0.12),
+                  color: context.isDarkMode ? const Color(0xFF281F40) : AppColors.aiPurple.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: AppColors.aiPurple, size: 20),
+                child: Icon(icon, color: context.isDarkMode ? const Color(0xFFB49BFF) : AppColors.aiPurple, size: 20),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -582,14 +621,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 9, color: AppColors.textMuted),
+                      style: TextStyle(fontSize: 9, color: context.secondaryTextColor),
                     ),
                   ],
                 ),

@@ -46,7 +46,13 @@ class AuthProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      final rawError = e.toString().replaceAll('Exception: ', '');
+      if (rawError.toLowerCase().contains('timeoutexception') ||
+          rawError.toLowerCase().contains('future not completed')) {
+        _errorMessage = 'O servidor na nuvem está iniciando (cold start). Aguarde alguns segundos e tente novamente.';
+      } else {
+        _errorMessage = rawError;
+      }
       notifyListeners();
       return false;
     }

@@ -60,8 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentIndex == 3) appBarTitle = 'Perfil';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       drawer: Drawer(
+        backgroundColor: context.cardColor,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -191,15 +192,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: tabs[_currentIndex],
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.borderLight, width: 1)),
-          color: Colors.white,
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: context.borderColor, width: 1)),
+          color: context.isDarkMode ? AppDarkColors.bottomNav : Colors.white,
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          selectedItemColor: AppColors.headerGreen,
-          unselectedItemColor: AppColors.textMuted,
-          backgroundColor: Colors.white,
+          selectedItemColor: context.isDarkMode ? AppColors.accentEmerald : AppColors.headerGreen,
+          unselectedItemColor: context.isDarkMode ? AppDarkColors.textMuted : AppColors.textMuted,
+          backgroundColor: context.isDarkMode ? AppDarkColors.bottomNav : Colors.white,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
@@ -294,11 +295,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       isProfessor ? 'Olá, Prof. $firstName!' : 'Olá, $firstName!',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,
-                        color: AppColors.textDark,
+                        color: context.primaryTextColor,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -306,10 +307,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       isProfessor
                           ? 'Portal de Apoio Docente e Atendimento ASA'
                           : 'Como posso ajudar você hoje?',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textBody,
+                        color: context.secondaryTextColor,
                       ),
                     ),
                   ],
@@ -323,9 +324,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderMedium.withOpacity(0.6)),
+              border: Border.all(color: context.borderColor),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
@@ -342,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryTextColor),
                     decoration: InputDecoration(
                       hintText: isProfessor
                           ? 'Pergunte sobre normas, diário, salas ou ASA...'
@@ -399,11 +400,11 @@ class _HomeScreenState extends State<HomeScreen> {
           // 3. Seção: ACESSO RÁPIDO (Grade 2x2)
           Text(
             isProfessor ? 'ACESSO RÁPIDO DOCENTE' : 'ACESSO RÁPIDO',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
-              color: AppColors.textDark,
+              color: context.primaryTextColor,
             ),
           ),
           const SizedBox(height: 12),
@@ -515,11 +516,11 @@ class _HomeScreenState extends State<HomeScreen> {
           // 4. Seção: PERGUNTAS FREQUENTES
           Text(
             isProfessor ? 'DÚVIDAS FREQUENTES DOCENTES' : 'PERGUNTAS FREQUENTES',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
-              color: AppColors.textDark,
+              color: context.primaryTextColor,
             ),
           ),
           const SizedBox(height: 12),
@@ -591,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: context.cardColor,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -600,7 +601,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderLight),
+            border: Border.all(color: context.borderColor),
             boxShadow: const [
               BoxShadow(
                 color: Colors.black12,
@@ -627,19 +628,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
-                      color: AppColors.textDark,
+                      color: context.primaryTextColor,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: AppColors.textMuted,
+                      color: context.secondaryTextColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -660,7 +661,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: context.cardColor,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -669,7 +670,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderLight),
+            border: Border.all(color: context.borderColor),
             boxShadow: const [
               BoxShadow(
                 color: Colors.black12,
@@ -702,10 +703,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 6),
                     Text(
                       question,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
+                        color: context.primaryTextColor,
                       ),
                     ),
                   ],

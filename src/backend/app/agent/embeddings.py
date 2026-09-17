@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from typing import List, Set
+from typing import List, Set, Optional
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -32,7 +32,9 @@ STOPWORDS_PT: Set[str] = {
     "ajudar", "favor", "acontece", "acontecer", "devo", "deve", "dever", "seria",
     "aluno", "alunos", "estudante", "estudantes", "faculdade", "fecap", "universidade",
     "semestre", "ano", "caso", "coisa", "mim", "pego", "funciona", "passar", "tirar",
-    "sao", "for", "foi", "forem", "tipo", "tipos",
+    "sao", "for", "foi", "forem", "tipo", "tipos", "duvida", "duvidas", "perguntar",
+    "falar", "pra", "pro", "ai", "la", "aqui", "realiza", "realizar", "realizala",
+    "direito", "posso", "poderei", "ficou", "fica",
 }
 
 
@@ -41,7 +43,6 @@ def get_stem(word: str) -> str:
     w = normalize_text(word)
     if len(w) <= 3:
         return w
-    # Sufixos verbais e nominais comuns em PT (ordenados dos mais longos aos mais curtos)
     suffixes = [
         "coes", "cao", "mentos", "mento", "ando", "endo", "indo", "aram", "erem", "irem",
         "aria", "ario", "ado", "ido", "ar", "er", "ir", "as", "es", "os", "s", "a", "o"
@@ -67,7 +68,7 @@ class TextVectorizer:
     """
     Vetorizador e calculador de relevância semântica calibrado:
     Combina TF-IDF com busca por radicais/stemming das palavras-chave,
-    fornecendo alta acurácia semântica e conformidade estrita de abstenção.
+    reforço por intenções institucionais (head boost) e conformidade de abstenção.
     """
     def __init__(self):
         self.vectorizer = TfidfVectorizer(
@@ -95,28 +96,49 @@ class TextVectorizer:
             raise ValueError("O vetorizador ainda não foi ajustado (fit) ao corpus.")
         return self.vectorizer.transform(texts)
 
-    def compute_similarity(self, query: str, query_vector: np.ndarray, doc_vectors: np.ndarray) -> np.ndarray:
+    def compute_similarity(
+        self,
+        query: str,
+        query_vector: np.ndarray,
+        doc_vectors: np.ndarray,
+        boost_keywords: Optional[List[str]] = None,
+    ) -> np.ndarray:
         """
-        Calcula o score de relevância calibrado (0.0 a 1.0).
+        Calcula o score de relevância calibrado (0.0 a 1.0) combinando cosseno,
+        cobertura léxica e bônus de intenção institucional (boost_keywords).
         """
         raw_cos = cosine_similarity(query_vector, doc_vectors)[0]
         calibrated_cos = np.clip(raw_cos * 2.5, 0.0, 1.0)
 
         q_stems = extract_keywords(query)
         if not q_stems:
-            return calibrated_cos
+            final_scores = calibrated_cos
+        else:
+            keyword_scores = []
+            for doc_text in self.corpus_raw:
+                doc_stems = set(extract_keywords(doc_text))
+                matched = sum(1 for stem in q_stems if stem in doc_stems)
+                coverage = matched / len(q_stems)
+                keyword_scores.append(coverage)
 
-        keyword_scores = []
-        for doc_text in self.corpus_raw:
-            doc_stems = set(extract_keywords(doc_text))
-            matched = sum(1 for stem in q_stems if stem in doc_stems)
-            coverage = matched / len(q_stems)
-            keyword_scores.append(coverage)
+            keyword_arr = np.array(keyword_scores)
+            final_scores = 0.50 * calibrated_cos + 0.50 * keyword_arr
+            # Protege score forte contra penalidade de termos conversacionais
+            final_scores = np.maximum(final_scores, calibrated_cos * 0.95)
 
-        keyword_arr = np.array(keyword_scores)
-        
-        # Média ponderada calibrada
-        final_scores = 0.50 * calibrated_cos + 0.50 * keyword_arr
-        # Se a similaridade cosseno for forte, protege o score contra penalidade excessiva de keywords
-        final_scores = np.maximum(final_scores, calibrated_cos * 0.90)
+        # Aplica bônus de intenção institucional (Head & Section Boost)
+        if boost_keywords:
+            boost_stems = [get_stem(k) for k in boost_keywords]
+            boost_arr = []
+            for doc_text in self.corpus_raw:
+                doc_stems = set(extract_keywords(doc_text[:350]))  # Prioriza título e topo do chunk
+                matches = sum(1 for bs in boost_stems if bs in doc_stems)
+                ratio = matches / len(boost_stems) if boost_stems else 0.0
+                boost_arr.append(ratio)
+
+            boost_bonus = np.array(boost_arr) * 0.18
+            # Aplica o bônus apenas se houver aderência mínima de contexto
+            valid_mask = calibrated_cos > 0.18
+            final_scores[valid_mask] += boost_bonus[valid_mask]
+
         return np.clip(final_scores, 0.0, 1.0)

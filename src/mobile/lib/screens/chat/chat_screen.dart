@@ -177,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final messages = chatProvider.messages;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       appBar: AppHeader(
         variant: AppHeaderVariant.chat,
         title: 'ASA Connect IA',
@@ -306,8 +306,8 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: AppColors.borderLight)),
+              color: context.isDarkMode ? AppDarkColors.surfaceCard : Colors.white,
+              border: Border(top: BorderSide(color: context.borderColor)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.04),
@@ -334,9 +334,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.borderLight),
+                        border: Border.all(color: context.borderColor),
                       ),
                       child: Row(
                         children: [
@@ -344,13 +344,15 @@ class _ChatScreenState extends State<ChatScreen> {
                           Expanded(
                             child: TextField(
                               controller: _textController,
+                              style: TextStyle(fontSize: 14, color: context.primaryTextColor),
                               textCapitalization: TextCapitalization.sentences,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'Digite sua mensagem...',
+                                hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 13),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(vertical: 10),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 10),
                               ),
                               onSubmitted: (_) => _sendMessage(),
                             ),

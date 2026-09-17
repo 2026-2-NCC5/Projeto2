@@ -88,20 +88,22 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
           padding: const EdgeInsets.all(16),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.inputFillColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: TextField(
               controller: _searchController,
+              style: TextStyle(color: context.primaryTextColor, fontSize: 13),
               onChanged: (val) => setState(() => _filter = val),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar conversas...',
-                prefixIcon: Icon(Icons.search_rounded, color: AppColors.textLight),
+                hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 13),
+                prefixIcon: Icon(Icons.search_rounded, color: context.secondaryTextColor),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -115,11 +117,11 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.chat_bubble_outline_rounded, size: 48, color: Colors.grey.shade400),
+                          Icon(Icons.chat_bubble_outline_rounded, size: 48, color: context.secondaryTextColor),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Nenhuma conversa encontrada.',
-                            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                            style: TextStyle(fontSize: 14, color: context.secondaryTextColor),
                           ),
                         ],
                       ),
@@ -133,7 +135,7 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                         final dateStr = DateFormat('dd/MM, HH:mm').format(conv.updatedAt);
 
                         return Material(
-                          color: Colors.white,
+                          color: context.cardColor,
                           borderRadius: BorderRadius.circular(14),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(14),
@@ -148,19 +150,25 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.borderLight),
+                                border: Border.all(color: context.borderColor),
                               ),
                               child: Row(
                                 children: [
                                   Container(
                                     width: 40,
                                     height: 40,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.accentMint,
+                                    decoration: BoxDecoration(
+                                      color: context.isDarkMode
+                                          ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                                          : AppColors.accentMint,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Center(
-                                      child: Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen, size: 20),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.chat_bubble_outline_rounded,
+                                        color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -176,16 +184,16 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                                                 conv.title,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.bold,
-                                                  color: AppColors.textDark,
+                                                  color: context.primaryTextColor,
                                                 ),
                                               ),
                                             ),
                                             Text(
                                               dateStr,
-                                              style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+                                              style: TextStyle(fontSize: 10, color: context.secondaryTextColor),
                                             ),
                                           ],
                                         ),
@@ -194,9 +202,9 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                                           conv.lastMessage ?? 'Conversa com o ASA Connect+',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
-                                            color: AppColors.textMuted,
+                                            color: context.secondaryTextColor,
                                           ),
                                         ),
                                       ],
@@ -216,10 +224,10 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
     if (widget.isTab) return content;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: AppColors.headerGreen,
+        backgroundColor: context.headerColor,
         title: const Text('Conversas', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: content,

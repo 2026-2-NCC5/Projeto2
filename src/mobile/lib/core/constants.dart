@@ -68,3 +68,36 @@ class AppConstants {
   // URL base padrão da API em nuvem (Render + Supabase)
   static const String defaultApiBaseUrl = "https://projeto2-7gf7.onrender.com/api/v1";
 }
+
+class AppDarkColors {
+  // Paleta FECAP Emerald Slate
+  static const Color background = Color(0xFF0F1715);       // Fundo dark slate institucional
+  static const Color surfaceCard = Color(0xFF182420);      // Superfície de cards Nível 1
+  static const Color surfaceInput = Color(0xFF21302B);     // Fundo de inputs / chips Nível 2
+  static const Color border = Color(0xFF2D3E38);           // Borda dark nítida
+  static const Color borderSubtle = Color(0xFF23322B);     // Borda divisória sutil
+  static const Color textLight = Color(0xFFF1F5F9);        // Texto primário claro
+  static const Color textMuted = Color(0xFFA7B5AF);        // Texto secundário legível
+  static const Color headerGreen = Color(0xFF131C18);      // Header escuro institucional
+  static const Color bottomNav = Color(0xFF131C18);        // Barra de navegação inferior
+  static const Color userBubble = Color(0xFF006C4C);       // Bolha do usuário (verde institucional)
+  static const Color agentBubble = Color(0xFF1B2923);      // Bolha do agente IA
+  static const Color agentBubbleBorder = Color(0xFF2E433A);// Borda da bolha do agente
+  static const Color attendantBubble = Color(0xFF18293B);  // Bolha do atendente humano
+  static const Color attendantBorder = Color(0xFF3B82F6);  // Borda atendente humano
+  static const Color abstentionBg = Color(0xFF261E0E);     // Fundo do card de abstenção
+  static const Color abstentionBorder = Color(0xFF8A6D1C); // Borda da abstenção
+  static const Color abstentionText = Color(0xFFFDE68A);   // Texto da abstenção
+}
+
+extension ThemeContextExtension on BuildContext {
+  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+  Color get backgroundColor => isDarkMode ? AppDarkColors.background : AppColors.background;
+  Color get cardColor => isDarkMode ? AppDarkColors.surfaceCard : Colors.white;
+  Color get inputFillColor => isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC);
+  Color get borderColor => isDarkMode ? AppDarkColors.border : AppColors.borderLight;
+  Color get primaryTextColor => isDarkMode ? AppDarkColors.textLight : AppColors.textDark;
+  Color get secondaryTextColor => isDarkMode ? AppDarkColors.textMuted : AppColors.textMuted;
+  Color get headerColor => isDarkMode ? AppDarkColors.headerGreen : AppColors.headerGreen;
+}
+

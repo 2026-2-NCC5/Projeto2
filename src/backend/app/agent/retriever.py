@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.agent.embeddings import TextVectorizer
+from app.agent.query_expander import query_expander
 from app.models.document import KnowledgeDocument
 
 
@@ -231,7 +232,8 @@ class KnowledgeRetriever:
     def retrieve(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """
         Busca os top-k chunks mais similares à pergunta do usuário,
-        calculando score de similaridade de cosseno e cobertura de termos.
+        aplicando expansão semântica de intenções, cálculo de similaridade
+        híbrida e reforço por seção/título institucional.
         """
         if not self.chunks or self.chunk_vectors is None or self.chunk_vectors.shape[0] == 0:
             return []
@@ -254,8 +256,22 @@ class KnowledgeRetriever:
                 clean_query = clean_query[len(p):].strip()
                 break
 
-        query_vec = self.vectorizer.transform([clean_query])
-        similarities = self.vectorizer.compute_similarity(clean_query, query_vec, self.chunk_vectors)
+        # Expansão semântica de intenções acadêmicas (FECAP)
+        expanded_query, boost_keywords, detected_category = query_expander.expand(clean_query)
+
+        query_vec = self.vectorizer.transform([expanded_query])
+        similarities = self.vectorizer.compute_similarity(
+            expanded_query,
+            query_vec,
+            self.chunk_vectors,
+            boost_keywords=boost_keywords,
+        )
+
+        # Bônus adicional de categoria para desempate contextual
+        if detected_category:
+            for i, chunk in enumerate(self.chunks):
+                if chunk.category.lower() == detected_category.lower() and similarities[i] > 0.20:
+                    similarities[i] = min(1.0, similarities[i] + 0.05)
 
         # Ordena por similaridade decrescente
         top_indices = similarities.argsort()[::-1][:top_k]

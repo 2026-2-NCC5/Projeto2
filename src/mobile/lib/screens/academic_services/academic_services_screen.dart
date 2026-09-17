@@ -42,9 +42,9 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.inputFillColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: Row(
               children: [
@@ -53,17 +53,19 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
+                    style: TextStyle(color: context.primaryTextColor, fontSize: 13),
                     onChanged: (val) => setState(() => _searchQuery = val.toLowerCase().trim()),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Buscar serviço ou procedimento...',
+                      hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 13),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
                 if (_searchQuery.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.clear_rounded, size: 18),
+                    icon: Icon(Icons.clear_rounded, size: 18, color: context.secondaryTextColor),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -86,15 +88,15 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
                     label: Text(cat),
                     selected: isSelected,
                     selectedColor: AppColors.primaryGreen,
-                    backgroundColor: Colors.white,
+                    backgroundColor: context.cardColor,
                     labelStyle: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : AppColors.textBody,
+                      color: isSelected ? Colors.white : context.primaryTextColor,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: isSelected ? AppColors.primaryGreen : AppColors.borderLight),
+                      side: BorderSide(color: isSelected ? AppColors.primaryGreen : context.borderColor),
                     ),
                     onSelected: (_) => setState(() => _selectedCategory = cat),
                   ),
@@ -256,16 +258,16 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
 
     if (widget.isTab) {
       return Container(
-        color: AppColors.background,
+        color: context.backgroundColor,
         child: content,
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: AppColors.headerGreen,
+        backgroundColor: context.headerColor,
         title: const Text('Serviços Acadêmicos', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, size: 20),
@@ -297,9 +299,9 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,19 +315,19 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
                 const SizedBox(width: 8),
                 Text(
                   categoryTitle,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.borderLight),
+          Divider(height: 1, color: context.borderColor),
 
           // Lista de Itens
           ...filteredItems.map((item) {
             return ListTile(
               title: Text(
                 item.title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textBody),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryTextColor),
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -335,15 +337,19 @@ class _AcademicServicesScreenState extends State<AcademicServicesScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       margin: const EdgeInsets.only(right: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.accentMint,
+                        color: context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         item.badge!,
-                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                        ),
                       ),
                     ),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textLight, size: 20),
+                  Icon(Icons.chevron_right_rounded, color: context.secondaryTextColor, size: 20),
                 ],
               ),
               onTap: () {

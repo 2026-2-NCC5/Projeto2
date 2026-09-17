@@ -64,7 +64,7 @@ class ApiClient {
     debugPrint('[ApiClient] GET $uri');
     return await http
         .get(uri, headers: _headers())
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> post(String path, dynamic body) async {
@@ -76,7 +76,7 @@ class ApiClient {
           headers: _headers(),
           body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> patch(String path, dynamic body) async {
@@ -88,7 +88,7 @@ class ApiClient {
           headers: _headers(),
           body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> delete(String path) async {
@@ -96,6 +96,6 @@ class ApiClient {
     debugPrint('[ApiClient] DELETE $uri');
     return await http
         .delete(uri, headers: _headers())
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 60));
   }
 }

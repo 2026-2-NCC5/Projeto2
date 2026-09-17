@@ -70,21 +70,22 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: context.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.headset_mic_rounded, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Canais de Atendimento ASA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Icon(Icons.headset_mic_rounded, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Text('Canais de Atendimento ASA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryTextColor)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Problemas para acessar o aplicativo ou recuperar suas credenciais?',
-              style: TextStyle(fontSize: 12, color: AppColors.textBody, height: 1.4),
+              style: TextStyle(fontSize: 12, color: context.secondaryTextColor, height: 1.4),
             ),
             const SizedBox(height: 14),
             _buildSupportItem(Icons.chat_bubble_outline_rounded, 'WhatsApp Oficial:', '(11) 3272-2222'),
@@ -97,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Entendi'),
+            child: const Text('Entendi', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -115,10 +116,10 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+                style: TextStyle(fontSize: 12, color: context.primaryTextColor),
                 children: [
                   TextSpan(text: '$label ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  TextSpan(text: value),
+                  TextSpan(text: value, style: TextStyle(color: context.secondaryTextColor)),
                 ],
               ),
             ),
@@ -205,13 +206,13 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: context.isDarkMode ? Colors.black45 : Colors.black26,
                       blurRadius: 24,
-                      offset: Offset(0, 10),
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -220,34 +221,36 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
                           'Acesso Institucional',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                            color: context.primaryTextColor,
                           ),
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      const Text(
+                      Text(
                         'RA / MATRICULA',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
-                          color: AppColors.textMuted,
+                          color: context.secondaryTextColor,
                         ),
                       ),
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _identifierController,
                         keyboardType: TextInputType.text,
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: context.primaryTextColor),
+                        decoration: InputDecoration(
                           hintText: 'Digite seu RA ou e-mail',
-                          prefixIcon: Icon(Icons.badge_outlined, size: 18, color: AppColors.primaryGreen),
+                          hintStyle: TextStyle(color: context.secondaryTextColor),
+                          prefixIcon: const Icon(Icons.badge_outlined, size: 18, color: AppColors.primaryGreen),
                         ),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Informe seu RA ou e-mail' : null,
@@ -257,13 +260,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'SENHA',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
-                              color: AppColors.textMuted,
+                              color: context.secondaryTextColor,
                             ),
                           ),
                           GestureDetector(
@@ -287,8 +290,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        style: TextStyle(color: context.primaryTextColor),
                         decoration: InputDecoration(
                           hintText: 'Senha',
+                          hintStyle: TextStyle(color: context.secondaryTextColor),
                           prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.primaryGreen),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -296,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               size: 18,
-                              color: AppColors.textMuted,
+                              color: context.secondaryTextColor,
                             ),
                             onPressed: () =>
                                 setState(() => _obscurePassword = !_obscurePassword),
@@ -327,23 +332,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                   children: [
                                     Text('Entrar',
                                         style: TextStyle(
+                                            color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 15)),
                                     SizedBox(width: 6),
-                                    Icon(Icons.arrow_forward_rounded, size: 16),
+                                    Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                                   ],
                                 ),
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      const Center(
+                      Center(
                         child: Text(
-                          'Contas de Teste para Avaliacao:',
+                          'Contas de Teste para Avaliação:',
                           style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textLight),
+                              color: context.secondaryTextColor),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -353,40 +359,44 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: WrapAlignment.center,
                         children: [
                           ActionChip(
-                            label: const Text('Aluno 123456', style: TextStyle(fontSize: 10)),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            label: Text('Aluno 123456', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
                             onPressed: () => _fillCredentials('123456', 'senha123'),
                           ),
                           ActionChip(
-                            label: const Text('Prof. Almeida', style: TextStyle(fontSize: 10)),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            label: Text('Prof. Almeida', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
                             onPressed: () => _fillCredentials('prof.almeida@fecap.br', 'senha123'),
                           ),
                           ActionChip(
-                            label: const Text('Atendente ASA', style: TextStyle(fontSize: 10)),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            label: Text('Atendente ASA', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
                             onPressed: () => _fillCredentials('atendente@fecap.br', 'senha123'),
                           ),
                           ActionChip(
-                            label: const Text('Admin', style: TextStyle(fontSize: 10)),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            label: Text('Admin', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
                             onPressed: () => _fillCredentials('admin@fecap.br', 'senha123'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Divider(height: 1, color: AppColors.borderLight),
+                      Divider(height: 1, color: context.borderColor),
                       const SizedBox(height: 12),
 
                       Center(
                         child: TextButton(
                           onPressed: _showSupportDialog,
-                          child: const Text(
+                          child: Text(
                             'Problemas com o acesso? Fale com o Suporte',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textMuted,
+                              color: context.secondaryTextColor,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

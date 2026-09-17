@@ -25,12 +25,12 @@ class UserMessageBubble extends StatelessWidget {
                 style: const TextStyle(fontSize: 10, color: AppColors.textLight),
               ),
               const SizedBox(width: 6),
-              const Text(
+              Text(
                 'Você',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+                  color: context.primaryTextColor,
                 ),
               ),
             ],
@@ -38,9 +38,9 @@ class UserMessageBubble extends StatelessWidget {
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: context.isDarkMode ? AppDarkColors.userBubble : AppColors.primaryGreen,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(4),
                 bottomLeft: Radius.circular(16),

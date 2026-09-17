@@ -71,13 +71,13 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: context.isDarkMode ? Colors.black45 : Colors.black26,
                       blurRadius: 20,
-                      offset: Offset(0, 8),
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -87,8 +87,8 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                     Container(
                       width: 56,
                       height: 56,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentMint,
+                      decoration: BoxDecoration(
+                        color: context.isDarkMode ? const Color(0xFF16382C) : AppColors.accentMint,
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -101,12 +101,12 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    const Text(
+                    Text(
                       'Recuperação de Acesso',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                        color: context.primaryTextColor,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -116,7 +116,7 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textMuted,
+                        color: context.secondaryTextColor,
                         height: 1.4,
                       ),
                     ),
@@ -126,13 +126,13 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.accentMint,
+                          color: context.isDarkMode ? const Color(0xFF16382C) : AppColors.accentMint,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppColors.accentEmerald),
                         ),
                         child: Text(
                           _message!,
-                          style: const TextStyle(fontSize: 12, color: AppColors.primaryGreen, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 12, color: context.isDarkMode ? AppColors.accentMint : AppColors.primaryGreen, fontWeight: FontWeight.w500),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -146,15 +146,17 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textMuted,
+                          color: context.secondaryTextColor,
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _controller,
+                      style: TextStyle(color: context.primaryTextColor),
                       decoration: InputDecoration(
                         hintText: 'Ex: 123456 ou seu.nome@fecap.br',
+                        hintStyle: TextStyle(color: context.secondaryTextColor),
                         prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18, color: AppColors.primaryGreen),
                       ),
                     ),
@@ -175,7 +177,7 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Text('Enviar Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            : const Text('Enviar Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
                       ),
                     ),
                   ],
@@ -188,7 +190,7 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
             ],

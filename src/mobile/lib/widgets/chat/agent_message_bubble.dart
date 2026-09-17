@@ -88,8 +88,10 @@ class AgentMessageBubble extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isAttendant
-                  ? const Color(0xFFF0FDF4)
-                  : (isAbstained ? AppColors.abstentionBg : AppColors.surfaceCard),
+                  ? (context.isDarkMode ? AppDarkColors.attendantBubble : const Color(0xFFF0FDF4))
+                  : (isAbstained
+                      ? (context.isDarkMode ? AppDarkColors.abstentionBg : AppColors.abstentionBg)
+                      : (context.isDarkMode ? AppDarkColors.agentBubble : AppColors.surfaceCard)),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(16),
@@ -98,8 +100,10 @@ class AgentMessageBubble extends StatelessWidget {
               ),
               border: Border.all(
                 color: isAttendant
-                    ? const Color(0xFF86EFAC)
-                    : (isAbstained ? AppColors.abstentionBorder : AppColors.borderLight),
+                    ? (context.isDarkMode ? AppDarkColors.attendantBorder : const Color(0xFF86EFAC))
+                    : (isAbstained
+                        ? (context.isDarkMode ? AppDarkColors.abstentionBorder : AppColors.abstentionBorder)
+                        : (context.isDarkMode ? AppDarkColors.agentBubbleBorder : AppColors.borderLight)),
                 width: isAbstained || isAttendant ? 1.5 : 1.0,
               ),
               boxShadow: [
@@ -117,14 +121,14 @@ class AgentMessageBubble extends StatelessWidget {
                 if (isAttendant) ...[
                   Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 16),
+                      Icon(Icons.check_circle_rounded, color: context.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669), size: 16),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         'RESPOSTA OFICIAL DO ATENDIMENTO ASA',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF065F46),
+                          color: context.isDarkMode ? const Color(0xFF34D399) : const Color(0xFF065F46),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -144,7 +148,7 @@ class AgentMessageBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Colors.amber.shade900,
+                          color: context.isDarkMode ? AppDarkColors.abstentionText : Colors.amber.shade900,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -158,7 +162,9 @@ class AgentMessageBubble extends StatelessWidget {
                   text: message.content,
                   baseStyle: TextStyle(
                     fontSize: 14,
-                    color: isAbstained ? Colors.brown.shade900 : AppColors.textBody,
+                    color: isAbstained
+                        ? (context.isDarkMode ? AppDarkColors.abstentionText : Colors.brown.shade900)
+                        : (context.isDarkMode ? AppDarkColors.textLight : AppColors.textBody),
                     height: 1.45,
                   ),
                 ),
@@ -169,9 +175,9 @@ class AgentMessageBubble extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: context.isDarkMode ? AppDarkColors.border : const Color(0xFFE2E8F0)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -181,10 +187,10 @@ class AgentMessageBubble extends StatelessWidget {
                         Flexible(
                           child: Text(
                             message.sourceCitation!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF475569),
+                              color: context.isDarkMode ? AppDarkColors.textLight : const Color(0xFF475569),
                             ),
                           ),
                         ),
@@ -203,10 +209,10 @@ class AgentMessageBubble extends StatelessWidget {
                       Flexible(
                         child: Text(
                           message.suggestedAction!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontStyle: FontStyle.italic,
-                            color: AppColors.textMuted,
+                            color: context.isDarkMode ? AppDarkColors.textMuted : AppColors.textMuted,
                           ),
                         ),
                       ),
@@ -215,8 +221,9 @@ class AgentMessageBubble extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 14),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, color: context.isDarkMode ? AppDarkColors.border : const Color(0xFFF1F5F9)),
                 const SizedBox(height: 10),
+
 
                 // Rodapé com Botões de Feedback e Escalonamento Humano
                 Row(
@@ -303,7 +310,7 @@ class AgentMessageBubble extends StatelessWidget {
                           color: isAbstained ? AppColors.primaryGreen : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isAbstained ? AppColors.primaryGreen : AppColors.borderMedium,
+                            color: isAbstained ? AppColors.primaryGreen : (context.isDarkMode ? AppDarkColors.border : AppColors.borderMedium),
                           ),
                         ),
                         child: Row(
@@ -312,7 +319,7 @@ class AgentMessageBubble extends StatelessWidget {
                             Icon(
                               Icons.headset_mic_rounded,
                               size: 13,
-                              color: isAbstained ? Colors.white : AppColors.textBody,
+                              color: isAbstained ? Colors.white : (context.isDarkMode ? AppDarkColors.textLight : AppColors.textBody),
                             ),
                             const SizedBox(width: 5),
                             Text(
@@ -320,7 +327,7 @@ class AgentMessageBubble extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: isAbstained ? FontWeight.bold : FontWeight.w600,
-                                color: isAbstained ? Colors.white : AppColors.textBody,
+                                color: isAbstained ? Colors.white : (context.isDarkMode ? AppDarkColors.textLight : AppColors.textBody),
                               ),
                             ),
                           ],

@@ -82,23 +82,29 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: context.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Resolver Caso de Atendimento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Resolver Caso de Atendimento',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Informe a orientação ou justificativa fornecida ao estudante (RF08):',
-              style: TextStyle(fontSize: 12, color: AppColors.textBody),
+              style: TextStyle(fontSize: 12, color: context.secondaryTextColor),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: notesController,
               maxLines: 4,
-              decoration: const InputDecoration(
+              style: TextStyle(color: context.primaryTextColor, fontSize: 13),
+              decoration: InputDecoration(
                 hintText: 'Ex: Orientado a comparecer na Secretaria Geral para retirada do documento oficial com RG...',
-                border: OutlineInputBorder(),
+                hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 12),
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -122,9 +128,11 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                   'resolution_notes': text,
                 });
                 if (resp.statusCode == 200) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Caso resolvido com sucesso!'), backgroundColor: AppColors.success),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Caso resolvido com sucesso!'), backgroundColor: AppColors.success),
+                    );
+                  }
                   _loadDashboardData();
                 }
               } catch (_) {}
@@ -142,12 +150,14 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
         'is_active': !currentStatus,
       });
       if (resp.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(!currentStatus ? 'Documento ativado na base RAG.' : 'Documento desativado do índice RAG.'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(!currentStatus ? 'Documento ativado na base RAG.' : 'Documento desativado do índice RAG.'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
         _loadDashboardData();
       }
     } catch (_) {}
@@ -156,10 +166,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: AppColors.headerGreen,
+        backgroundColor: context.headerColor,
         title: const Text('Painel Gerencial ASA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         actions: [
           IconButton(
@@ -197,7 +207,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
 
   Widget _buildMetricsTab() {
     if (_stats == null) {
-      return const Center(child: Text('Sem métricas disponíveis.'));
+      return Center(child: Text('Sem métricas disponíveis.', style: TextStyle(color: context.secondaryTextColor)));
     }
 
     final abstentionRate = (_stats!['abstention_rate'] as num).toDouble();
@@ -209,7 +219,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Indicadores de Qualidade e Operação (RF11)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+          Text(
+            'Indicadores de Qualidade e Operação (RF11)',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
           const SizedBox(height: 12),
 
           // Grid de 4 KPIs
@@ -254,15 +267,18 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           const SizedBox(height: 24),
 
           // Tópicos Mais Frequentes
-          const Text('Distribuição por Categorias da Base', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+          Text(
+            'Distribuição por Categorias da Base',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
           const SizedBox(height: 10),
 
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: Column(
               children: categories.map((cat) {
@@ -275,8 +291,14 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(cat['category'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          Text('$pct% (${cat['count']} docs)', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                          Text(
+                            cat['category'],
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                          ),
+                          Text(
+                            '$pct% (${cat['count']} docs)',
+                            style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -285,7 +307,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                         child: LinearProgressIndicator(
                           value: pct / 100,
                           minHeight: 6,
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundColor: context.inputFillColor,
                           valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
                         ),
                       ),
@@ -298,21 +320,24 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           const SizedBox(height: 24),
 
           // Log de Auditoria Recente (RF10)
-          const Text('Trilha de Auditoria Recente (RF10)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+          Text(
+            'Trilha de Auditoria Recente (RF10)',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
           const SizedBox(height: 10),
 
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _auditLogs.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.borderLight),
+              separatorBuilder: (_, __) => Divider(height: 1, color: context.borderColor),
               itemBuilder: (context, index) {
                 final log = _auditLogs[index];
                 return ListTile(
@@ -320,13 +345,25 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                   leading: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.accentMint,
+                      color: context.isDarkMode
+                          ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                          : AppColors.accentMint,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(Icons.history_toggle_off_rounded, size: 14, color: AppColors.primaryGreen),
+                    child: Icon(
+                      Icons.history_toggle_off_rounded,
+                      size: 14,
+                      color: context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen,
+                    ),
                   ),
-                  title: Text(log['action'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  subtitle: Text('Usuário: ${log['user_name']} · ${log['created_at'].toString().substring(11, 16)}', style: const TextStyle(fontSize: 10)),
+                  title: Text(
+                    log['action'] ?? '',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                  ),
+                  subtitle: Text(
+                    'Usuário: ${log['user_name']} · ${log['created_at'].toString().substring(11, 16)}',
+                    style: TextStyle(fontSize: 10, color: context.secondaryTextColor),
+                  ),
                 );
               },
             ),
@@ -345,7 +382,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           children: [
             Icon(Icons.done_all_rounded, size: 48, color: Colors.green.shade300),
             const SizedBox(height: 12),
-            const Text('Nenhum caso pendente na fila humana do ASA.', style: TextStyle(color: AppColors.textMuted)),
+            Text('Nenhum caso pendente na fila humana do ASA.', style: TextStyle(color: context.secondaryTextColor)),
           ],
         ),
       );
@@ -362,10 +399,12 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isResolved ? AppColors.borderLight : const Color(0xFFFCA5A5),
+              color: isResolved
+                  ? context.borderColor
+                  : (context.isDarkMode ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5)),
               width: isResolved ? 1.0 : 1.5,
             ),
           ),
@@ -378,7 +417,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: isResolved ? AppColors.accentMint : const Color(0xFFFEE2E2),
+                      color: isResolved
+                          ? (context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint)
+                          : (context.isDarkMode ? const Color(0xFF3B1818) : const Color(0xFFFEE2E2)),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -386,24 +427,29 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: isResolved ? AppColors.primaryGreen : AppColors.error,
+                        color: isResolved
+                            ? (context.isDarkMode ? const Color(0xFF00E387) : AppColors.primaryGreen)
+                            : AppColors.error,
                       ),
                     ),
                   ),
-                  Text('Prioridade: ${esc['priority']}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  Text('Prioridade: ${esc['priority']}', style: TextStyle(fontSize: 11, color: context.secondaryTextColor)),
                 ],
               ),
               const SizedBox(height: 10),
 
               Text(
                 'Estudante: ${esc['student_name']} (RA: ${esc['student_ra'] ?? "N/A"})',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
               ),
               const SizedBox(height: 4),
-              Text('Motivo: ${esc['reason']}', style: const TextStyle(fontSize: 12, color: AppColors.textBody)),
+              Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, color: context.primaryTextColor)),
               if (esc['user_notes'] != null) ...[
                 const SizedBox(height: 4),
-                Text('Dúvida: "${esc['user_notes']}"', style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textMuted)),
+                Text(
+                  'Dúvida: "${esc['user_notes']}"',
+                  style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.secondaryTextColor),
+                ),
               ],
 
               if (isResolved && esc['resolution_notes'] != null) ...[
@@ -411,10 +457,13 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: context.inputFillColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text('Justificativa: ${esc['resolution_notes']}', style: const TextStyle(fontSize: 11, color: AppColors.textBody)),
+                  child: Text(
+                    'Justificativa: ${esc['resolution_notes']}',
+                    style: TextStyle(fontSize: 11, color: context.primaryTextColor),
+                  ),
                 ),
               ],
 
@@ -444,7 +493,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     final isActive = doc['is_active'] == true;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -459,7 +508,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.accentMint,
+                    color: context.isDarkMode ? const Color(0xFF16382C) : AppColors.accentMint,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.description_outlined, color: AppColors.primaryGreen, size: 22),
@@ -471,17 +520,17 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                     children: [
                       Text(
                         doc['title'] ?? 'Documento RAG',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                       ),
                       Text(
                         'Categoria: ${doc['category'] ?? "Geral"}',
-                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: Icon(Icons.close_rounded, size: 20, color: context.secondaryTextColor),
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ],
@@ -490,9 +539,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderLight),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,10 +558,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Ativar no Motor de Busca:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                Text('Ativar no Motor de Busca:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: context.primaryTextColor)),
                 Switch(
                   value: isActive,
-                  activeColor: AppColors.primaryGreen,
+                  activeThumbColor: AppColors.primaryGreen,
                   onChanged: (val) {
                     Navigator.of(ctx).pop();
                     _toggleDocumentActive(doc['id'], isActive);
@@ -535,10 +584,10 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
         children: [
           SizedBox(
             width: 140,
-            child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+            child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.secondaryTextColor)),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+            child: Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
           ),
         ],
       ),
@@ -571,27 +620,35 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
+              color: context.isDarkMode ? const Color(0xFF13221C) : const Color(0xFFF0FDF4),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFBBF7D0)),
+              border: Border.all(color: context.isDarkMode ? AppDarkColors.border : const Color(0xFFBBF7D0)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.verified_user_rounded, color: AppColors.primaryGreen, size: 22),
-                SizedBox(width: 12),
+                const Icon(Icons.verified_user_rounded, color: AppColors.primaryGreen, size: 22),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Governança de Fontes RAG (RF16)',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.headerGreen),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: context.isDarkMode ? AppColors.accentMint : AppColors.headerGreen,
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Fontes ativadas são consultadas pela IA para gerar respostas com citações auditáveis. Ao desativar uma fonte, ela é imediatamente removida da busca do ASA Connect.',
-                        style: TextStyle(fontSize: 11, color: AppColors.textDark, height: 1.35),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.secondaryTextColor,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
@@ -605,28 +662,30 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.borderLight),
+              border: Border.all(color: context.borderColor),
             ),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, color: AppColors.textLight, size: 20),
+                Icon(Icons.search_rounded, color: context.secondaryTextColor, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _ragSearchController,
                     onChanged: (val) => setState(() => _ragSearchQuery = val.toLowerCase().trim()),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: context.primaryTextColor),
+                    decoration: InputDecoration(
                       hintText: 'Buscar documentos ou categorias...',
+                      hintStyle: TextStyle(color: context.secondaryTextColor),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
                 if (_ragSearchQuery.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                    icon: Icon(Icons.close_rounded, size: 18, color: context.secondaryTextColor),
                     onPressed: () {
                       _ragSearchController.clear();
                       setState(() => _ragSearchQuery = '');
@@ -649,10 +708,12 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                     label: Text(cat),
                     selected: isSelected,
                     selectedColor: AppColors.primaryGreen,
+                    backgroundColor: context.cardColor,
+                    side: BorderSide(color: isSelected ? AppColors.primaryGreen : context.borderColor),
                     labelStyle: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : AppColors.textDark,
+                      color: isSelected ? Colors.white : context.secondaryTextColor,
                     ),
                     onSelected: (_) => setState(() => _ragCategoryFilter = cat),
                   ),
@@ -669,9 +730,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    Icon(Icons.search_off_rounded, size: 40, color: Colors.grey.shade400),
+                    Icon(Icons.search_off_rounded, size: 40, color: context.secondaryTextColor),
                     const SizedBox(height: 8),
-                    const Text('Nenhuma fonte encontrada com os filtros atuais.', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                    Text('Nenhuma fonte encontrada com os filtros atuais.', style: TextStyle(color: context.secondaryTextColor, fontSize: 12)),
                   ],
                 ),
               ),
@@ -687,7 +748,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 final isActive = doc['is_active'] == true;
 
                 return Material(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(14),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(14),
@@ -696,19 +757,21 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.borderLight),
+                        border: Border.all(color: context.borderColor),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: isActive ? AppColors.accentMint : const Color(0xFFF1F5F9),
+                              color: isActive
+                                  ? (context.isDarkMode ? const Color(0xFF16382C) : AppColors.accentMint)
+                                  : (context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9)),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.menu_book_rounded,
-                              color: isActive ? AppColors.primaryGreen : AppColors.textLight,
+                              color: isActive ? AppColors.primaryGreen : context.secondaryTextColor,
                               size: 20,
                             ),
                           ),
@@ -722,20 +785,20 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
-                                    color: isActive ? AppColors.textDark : AppColors.textMuted,
+                                    color: isActive ? context.primaryTextColor : context.secondaryTextColor,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '${doc['category']} · ${doc['official_source']}',
-                                  style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                                  style: TextStyle(fontSize: 10, color: context.secondaryTextColor),
                                 ),
                               ],
                             ),
                           ),
                           Switch(
                             value: isActive,
-                            activeColor: AppColors.primaryGreen,
+                            activeThumbColor: AppColors.primaryGreen,
                             onChanged: (_) => _toggleDocumentActive(doc['id'], isActive),
                           ),
                         ],
@@ -760,9 +823,9 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -771,7 +834,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: AppColors.textMuted)),
+              Text(title, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: context.secondaryTextColor)),
               Icon(icon, size: 16, color: color),
             ],
           ),
@@ -783,7 +846,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
             subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 9, color: AppColors.textMuted),
+            style: TextStyle(fontSize: 9, color: context.secondaryTextColor),
           ),
         ],
       ),

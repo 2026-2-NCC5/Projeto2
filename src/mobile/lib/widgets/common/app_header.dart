@@ -41,9 +41,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     return Container(
       height: preferredSize.height + MediaQuery.of(context).padding.top,
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      decoration: const BoxDecoration(
-        color: AppColors.headerGreen,
-        boxShadow: [
+      decoration: BoxDecoration(
+        color: context.headerColor,
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 4,
@@ -117,7 +117,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                         Text(
                           subtitle!,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 10,
                             fontWeight: FontWeight.w400,
                           ),
