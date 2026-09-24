@@ -117,4 +117,5 @@ desktop.ini
 *.iws
 
 *.apk
+!ASA-Connect-Plus.apk
 

@@ -116,21 +116,28 @@ docker compose up -d
 
 ---
 
-### 📱 3.2 Mobile (Flutter)
+### 📱 3.2 Mobile (Flutter) & Demonstração da PoC (APK)
 
-1. Em outro terminal, navegue até a pasta do mobile:
-   ```bash
-   cd src/mobile
-   ```
-2. Baixe as dependências do Flutter:
-   ```bash
-   flutter pub get
-   ```
-3. Execute o aplicativo no navegador (Google Chrome):
-   ```bash
-   flutter run -d chrome --web-port=3000
-   ```
-   > 📍 **App no Navegador:** [http://localhost:3000](http://localhost:3000)
+A demonstração da aplicação mobile pode ser realizada de duas maneiras:
+
+1. **Instalação Direta via APK (Android):**
+   * O aplicativo de Release compilado está disponível diretamente na raiz deste repositório: [**`ASA-Connect-Plus.apk`**](ASA-Connect-Plus.apk) *(54 MB)*.
+   * O APK já está conectado nativamente à API em nuvem no Render (`https://projeto2-7gf7.onrender.com/api/v1`), com suporte completo a Dark Mode e Tom Alvarista.
+
+2. **Execução Local do Código-fonte:**
+   1. Em outro terminal, navegue até a pasta do mobile:
+      ```bash
+      cd src/mobile
+      ```
+   2. Baixe as dependências do Flutter:
+      ```bash
+      flutter pub get
+      ```
+   3. Execute o aplicativo no navegador (Google Chrome):
+      ```bash
+      flutter run -d chrome --web-port=3000
+      ```
+      > 📍 **App no Navegador:** [http://localhost:3000](http://localhost:3000)
 
 ---
 
