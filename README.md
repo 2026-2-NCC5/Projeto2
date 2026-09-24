@@ -42,14 +42,24 @@ A solução explora princípios de **Inteligência Artificial**, **Programação
 ---
 
 ## 🛠 2. Estrutura de Pastas
-Conforme os requisitos das disciplinas:
+Conforme os requisitos das disciplinas e Unidades Curriculares:
 ```text
 📁 Documentos
- └── 📁 Entrega_1
- └── 📁 Entrega_2
+ ├── 📁 Entrega 1
+ │    ├── 📁 Projeto Interdisciplinar - Inteligência Artificial
+ │    ├── 📁 Inteligência Artificial e Aprendizado de Máquina
+ │    ├── 📁 Álgebra Linear, Vetores e Geometria Analítica
+ │    ├── 📁 Sistemas Operacionais e Computação em Nuvem
+ │    └── 📁 Psicologia, Liderança e Soft Skills
+ └── 📁 Entrega 2
+      ├── 📁 Projeto Interdisciplinar - Inteligência Artificial
+      ├── 📁 Inteligência Artificial e Aprendizado de Máquina
+      ├── 📁 Álgebra Linear, Vetores e Geometria Analítica
+      ├── 📁 Sistemas Operacionais e Computação em Nuvem
+      └── 📁 Psicologia, Liderança e Soft Skills
 📁 src
- └── 📁 backend
- └── 📁 mobile
+ ├── 📁 backend
+ ├── 📁 mobile
  └── 📁 notebooks
 📄 .gitignore
 📄 README.md
