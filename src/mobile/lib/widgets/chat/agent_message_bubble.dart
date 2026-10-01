@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:asa_connect/core/constants.dart';
 import 'package:asa_connect/models/chat_message.dart';
+import 'package:asa_connect/services/tts_service.dart';
 
 class AgentMessageBubble extends StatelessWidget {
   final ChatMessageModel message;
@@ -108,7 +110,7 @@ class AgentMessageBubble extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -225,14 +227,61 @@ class AgentMessageBubble extends StatelessWidget {
                 const SizedBox(height: 10),
 
 
-                // Rodapé com Botões de Feedback e Escalonamento Humano
+                // Rodapé com Botões de Feedback, Acessibilidade de Áudio e Escalonamento Humano
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Botões de Feedback (RF17)
-                    if (!isAbstained)
-                      Row(
-                        children: [
+                    // Ações do Lado Esquerdo: Ouvir Áudio (TTS) + Feedback
+                    Row(
+                      children: [
+                        // Botão Ouvir Áudio (Acessibilidade TTS)
+                        Consumer<TtsService>(
+                          builder: (context, tts, _) {
+                            final isPlayingThis = tts.isSpeaking && tts.currentMessageId == message.id;
+                            return Semantics(
+                              button: true,
+                              label: isPlayingThis ? 'Parar leitura em voz alta' : 'Ouvir resposta em voz alta',
+                              child: InkWell(
+                                onTap: () => tts.toggleSpeak(messageId: message.id, content: message.content),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isPlayingThis
+                                        ? (context.isDarkMode ? AppColors.primaryGreen.withValues(alpha: 0.25) : AppColors.accentMint)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: isPlayingThis
+                                        ? Border.all(color: AppColors.primaryGreen, width: 1)
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isPlayingThis ? Icons.stop_circle_rounded : Icons.volume_up_rounded,
+                                        size: 13,
+                                        color: isPlayingThis ? AppColors.primaryGreen : AppColors.textMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isPlayingThis ? 'Parar' : 'Ouvir',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isPlayingThis ? AppColors.primaryGreen : AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Botões de Feedback (RF17)
+                        if (!isAbstained) ...[
+                          const SizedBox(width: 6),
                           InkWell(
                             onTap: () => onFeedback?.call(true),
                             borderRadius: BorderRadius.circular(6),
@@ -293,9 +342,8 @@ class AgentMessageBubble extends StatelessWidget {
                             ),
                           ),
                         ],
-                      )
-                    else
-                      const SizedBox.shrink(),
+                      ],
+                    ),
 
                     // Botão "Falar com o ASA" (Escalonamento Humano)
                     InkWell(

@@ -5,6 +5,7 @@ import 'package:asa_connect/services/api_client.dart';
 import 'package:asa_connect/state/accessibility_provider.dart';
 import 'package:asa_connect/state/auth_provider.dart';
 import 'package:asa_connect/state/chat_provider.dart';
+import 'package:asa_connect/services/tts_service.dart';
 import 'package:asa_connect/screens/splash/splash_screen.dart';
 
 void main() async {
@@ -23,6 +24,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => accessibilityProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => TtsService()),
       ],
       child: const AsaConnectApp(),
     ),

@@ -5,6 +5,7 @@ import 'package:asa_connect/state/chat_provider.dart';
 import 'package:asa_connect/widgets/chat/agent_message_bubble.dart';
 import 'package:asa_connect/widgets/chat/user_message_bubble.dart';
 import 'package:asa_connect/widgets/common/app_header.dart';
+import 'package:asa_connect/services/tts_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? conversationId;
@@ -32,6 +33,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    try {
+      Provider.of<TtsService>(context, listen: false).stop();
+    } catch (_) {}
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -52,6 +56,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+
+    // Interrompe fala anterior ao enviar nova mensagem
+    try {
+      Provider.of<TtsService>(context, listen: false).stop();
+    } catch (_) {}
 
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.sendMessage(text);
