@@ -14,7 +14,7 @@ class RAGPipeline:
         self.config = load_rag_config()
         self.agent_version = self.config.get("agent", {}).get("version", "asa-rag-v1.0.0")
 
-    def answer_query(self, query: str, top_k: int = 4) -> Dict[str, Any]:
+    def answer_query(self, query: str, top_k: int = 4, profile_type: Optional[str] = "ALUNO") -> Dict[str, Any]:
         """
         Processa uma pergunta do estudante e gera a resposta fundamentada com rastreabilidade total.
         """
@@ -78,7 +78,7 @@ class RAGPipeline:
         source_citation = f"Fonte: {doc_title} · {section} · atualizado em {updated_at}"
 
         # Síntese conversacional inteligente (LLM ou Local Alvarista)
-        answer_text = synthesize_response(query, retrieved_results)
+        answer_text = synthesize_response(query, retrieved_results, profile_type=profile_type)
         
         # Sugestão dinâmica de próxima ação (RF07)
         q_low = query.lower()

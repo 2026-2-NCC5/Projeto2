@@ -42,7 +42,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
       key: 'PROFESSOR',
       title: 'PROFESSOR',
       description: 'CONSULTE INFORMAÇÕES E PROCEDIMENTOS PARA APOIAR SUA ATIVIDADE ACADÊMICA.',
-      imageAsset: 'assets/images/persona_aluno.png',
+      imageAsset: 'assets/images/persona_professor.png',
       isFunctional: true,
     ),
     ProfileItem(

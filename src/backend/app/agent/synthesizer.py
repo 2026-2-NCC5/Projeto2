@@ -18,8 +18,26 @@ Diretrizes Obrigatórias:
 """
 
 
-def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[str]:
+def _get_system_prompt_for_profile(profile_type: Optional[str] = "ALUNO") -> str:
+    p = (profile_type or "ALUNO").upper()
+    if "PROFESSOR" in p:
+        return """Você é o assistente inteligente do ASA Connect+ para o corpo docente da FECAP.
+Sua missão é prestar apoio rápido a professores sobre calendários, avaliações, PEDP, processos de acolhimento e sinalização preventiva de alunos em risco ao ASA.
+Diretrizes: Tom acadêmico, colaborativo, claro e focado nas diretrizes pedagógicas e regulatórias da FECAP."""
+    elif "RESPONSAVEL" in p:
+        return """Você é o assistente oficial do ASA Connect+ para pais e responsáveis financeiros dos estudantes da FECAP.
+Sua missão é esclarecer com transparência, segurança e respeito à LGPD questões financeiras (boletos, mensalidades, declarações IRPF) e procedimentos administrativos institucionais.
+Diretrizes: Tom acolhedor, formal, respeitoso e focado em regulamentos contratuais e financeiros."""
+    elif "COLABORADOR" in p or "ADMIN" in p:
+        return """Você é o assistente institucional do ASA Connect+ para colaboradores e equipes de atendimento da FECAP.
+Sua missão é fornecer consultas rápidas aos 311 manuais de procedimentos, prazos, taxas e fluxos internos de validação documental e protocolos.
+Diretrizes: Tom profissional, altamente técnico, objetivo e preciso quanto a normas institucionais."""
+    return ALVARISTA_SYSTEM_PROMPT
+
+
+def _generate_with_gemini(query: str, context: str, api_key: str, profile_type: Optional[str] = "ALUNO") -> Optional[str]:
     """Chama a API do Google Gemini via HTTP REST com fallback automático de modelos."""
+    system_prompt = _get_system_prompt_for_profile(profile_type)
     models_to_try = [
         getattr(settings, "LLM_MODEL", None) or "gemini-flash-lite-latest",
         "gemini-flash-lite-latest",
@@ -36,7 +54,7 @@ def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[st
                 "role": "user",
                 "parts": [
                     {
-                        "text": f"{ALVARISTA_SYSTEM_PROMPT}\n\nContexto Oficial da FECAP:\n{context}\n\nPergunta do Estudante:\n{query}"
+                        "text": f"{system_prompt}\n\nContexto Oficial da FECAP:\n{context}\n\nPergunta do Usuário:\n{query}"
                     }
                 ]
             }
@@ -66,8 +84,9 @@ def _generate_with_gemini(query: str, context: str, api_key: str) -> Optional[st
     return None
 
 
-def _generate_with_openai(query: str, context: str, api_key: str, base_url: str = "https://api.openai.com/v1") -> Optional[str]:
+def _generate_with_openai(query: str, context: str, api_key: str, base_url: str = "https://api.openai.com/v1", profile_type: Optional[str] = "ALUNO") -> Optional[str]:
     """Chama API compatível com OpenAI (OpenAI ou Groq)."""
+    system_prompt = _get_system_prompt_for_profile(profile_type)
     url = f"{base_url.rstrip('/')}/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -76,8 +95,8 @@ def _generate_with_openai(query: str, context: str, api_key: str, base_url: str 
     payload = {
         "model": "gpt-4o-mini" if "openai" in base_url else "llama-3.3-70b-versatile",
         "messages": [
-            {"role": "system", "content": ALVARISTA_SYSTEM_PROMPT},
-            {"role": "user", "content": f"Contexto Oficial FECAP:\n{context}\n\nPergunta do Aluno:\n{query}"}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Contexto Oficial FECAP:\n{context}\n\nPergunta do Usuário:\n{query}"}
         ],
         "temperature": 0.2,
         "max_tokens": 800,
@@ -129,13 +148,29 @@ def clean_markdown_snippet(text: str) -> str:
     return '\n'.join(clean).strip()
 
 
-def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
+def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]], profile_type: Optional[str] = "ALUNO") -> str:
     """
     Sintetizador Local Inteligente do ASA Connect+:
     Formata uma resposta humana, precisa e agradável a partir dos trechos oficiais recuperados,
     sem necessitar de chamadas externas de LLM.
     """
+    prof = (profile_type or "ALUNO").upper()
     if not retrieved_chunks:
+        if "PROFESSOR" in prof:
+            return (
+                "Olá, Professor(a)! Não localizei essa informação na base oficial de regulamentos docentes da FECAP. "
+                "Recomendo consultar a coordenação de curso ou a Secretaria Geral."
+            )
+        elif "RESPONSAVEL" in prof:
+            return (
+                "Olá! Não localizei essa informação na base oficial de serviços e normas da FECAP. "
+                "Para orientações sobre contratos, pagamentos ou autorizações, recomendamos contatar a Central de Atendimento ASA."
+            )
+        elif "COLABORADOR" in prof or "ADMIN" in prof:
+            return (
+                "Olá, Colega Alvarista! Essa informação não consta diretamente nos manuais indexados. "
+                "Consulte os fluxos de trabalho e procedimentos operacionais no Portal Corporativo."
+            )
         return (
             "Olá! Não localizei essa informação na base oficial de serviços e normas da FECAP. "
             "Para garantir a precisão de prazos e requerimentos, recomendo abrir um chamado no ASA ou contatar a nossa equipe."
@@ -185,7 +220,14 @@ def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
         elif not main_body or len(cleaned) > len(main_body):
             main_body = cleaned
 
-    greeting = "Olá, Alvarista!"
+    if "PROFESSOR" in prof:
+        greeting = "Olá, Professor(a)!"
+    elif "RESPONSAVEL" in prof:
+        greeting = "Olá! Seja bem-vindo(a) ao atendimento para responsáveis da FECAP."
+    elif "COLABORADOR" in prof or "ADMIN" in prof:
+        greeting = "Olá, Colega Alvarista!"
+    else:
+        greeting = "Olá, Alvarista!"
     
     # Personaliza introdução por contexto
     t_low = doc_title.lower()
@@ -261,8 +303,9 @@ def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
 
     # Se mesmo assim o corpo ficou sem explicações (apenas saudação), insere orientação segura de atendimento:
     if len(parts) <= 2:
+        portal_name = "Portal do Professor" if "PROFESSOR" in prof else ("Portal do Responsável" if "RESPONSAVEL" in prof else "Portal do Aluno")
         parts.append(
-            f"Para solicitar ou consultar orientações sobre **{doc_title}**, acesse o Portal do Aluno "
+            f"Para solicitar ou consultar orientações sobre **{doc_title}**, acesse o {portal_name} "
             f"(Menu > Requerimentos) ou dirija-se ao balcão de atendimento da Área do Sucesso Alvarista (ASA) no Campus Liberdade."
         )
         parts.append("")
@@ -272,14 +315,14 @@ def synthesize_local(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
     return "\n".join(parts)
 
 
-def synthesize_response(query: str, retrieved_chunks: List[Dict[str, Any]]) -> str:
+def synthesize_response(query: str, retrieved_chunks: List[Dict[str, Any]], profile_type: Optional[str] = "ALUNO") -> str:
     """
     Ponto de entrada do sintetizador:
     1. Se houver chave de LLM no ambiente, gera resposta generativa com zero alucinação.
     2. Caso contrário, executa o Sintetizador Local Inteligente.
     """
     if not retrieved_chunks:
-        return synthesize_local(query, [])
+        return synthesize_local(query, [], profile_type=profile_type)
 
     context_parts = []
     for i, r in enumerate(retrieved_chunks[:4]):
@@ -291,20 +334,20 @@ def synthesize_response(query: str, retrieved_chunks: List[Dict[str, Any]]) -> s
 
     gemini_key = getattr(settings, "GEMINI_API_KEY", None) or os.getenv("GEMINI_API_KEY")
     if gemini_key:
-        llm_out = _generate_with_gemini(query, context_text, gemini_key)
+        llm_out = _generate_with_gemini(query, context_text, gemini_key, profile_type=profile_type)
         if llm_out:
             return llm_out
 
     openai_key = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
     if openai_key:
-        llm_out = _generate_with_openai(query, context_text, openai_key)
+        llm_out = _generate_with_openai(query, context_text, openai_key, profile_type=profile_type)
         if llm_out:
             return llm_out
 
     groq_key = getattr(settings, "GROQ_API_KEY", None) or os.getenv("GROQ_API_KEY")
     if groq_key:
-        llm_out = _generate_with_openai(query, context_text, groq_key, base_url="https://api.groq.com/openai/v1")
+        llm_out = _generate_with_openai(query, context_text, groq_key, base_url="https://api.groq.com/openai/v1", profile_type=profile_type)
         if llm_out:
             return llm_out
 
-    return synthesize_local(query, retrieved_chunks)
+    return synthesize_local(query, retrieved_chunks, profile_type=profile_type)

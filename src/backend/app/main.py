@@ -25,45 +25,77 @@ async def lifespan(app: FastAPI):
     
     db = SessionLocal()
     try:
-        # 1. Seed automático de usuários se o banco estiver vazio
-        user_count = db.query(User).count()
-        if user_count == 0:
-            logger.info("Banco vazio detectado. Executando seed inicial de usuários fictícios...")
-            initial_users = [
-                User(
-                    ra_or_email="123456",
-                    email="aluno@fecap.br",
-                    full_name="Lucas Alvarista Silva",
-                    hashed_password=get_password_hash("senha123"),
-                    profile_type=ProfileType.ALUNO,
-                    ra="123456",
-                    course="Ciência da Computação",
-                    semester=5,
-                    campus="Campus Liberdade",
-                ),
-                User(
-                    ra_or_email="atendente@fecap.br",
-                    email="atendente@fecap.br",
-                    full_name="Mariana Atendente ASA",
-                    hashed_password=get_password_hash("senha123"),
-                    profile_type=ProfileType.ATENDENTE_ASA,
-                    ra="AT9901",
-                    course="Área de Sucesso Alvarista",
-                    campus="Campus Liberdade",
-                ),
-                User(
-                    ra_or_email="admin@fecap.br",
-                    email="admin@fecap.br",
-                    full_name="Coordenação Geral ASA",
-                    hashed_password=get_password_hash("senha123"),
-                    profile_type=ProfileType.ADMINISTRADOR,
-                    ra="ADM001",
-                    course="Diretoria Acadêmica",
-                    campus="Campus Liberdade",
-                ),
-            ]
-            db.add_all(initial_users)
-            db.commit()
+        # 1. Seed e garantia dos perfis institucionais (Aluno, Responsável, Professor, Colaborador, Atendente, Admin)
+        default_seed_users = [
+            User(
+                ra_or_email="123456",
+                email="aluno@fecap.br",
+                full_name="Lucas Alvarista Silva",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.ALUNO,
+                ra="123456",
+                course="Ciência da Computação",
+                semester=5,
+                campus="Campus Liberdade",
+            ),
+            User(
+                ra_or_email="responsavel@fecap.br",
+                email="responsavel@fecap.br",
+                full_name="Patrícia Rocha (Responsável)",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.RESPONSAVEL,
+                ra="RESP01",
+                course="Responsável Financeiro - Lucas (123456)",
+                semester=5,
+                campus="Campus Liberdade",
+            ),
+            User(
+                ra_or_email="prof.almeida@fecap.br",
+                email="prof.almeida@fecap.br",
+                full_name="Prof. Rafael Almeida Rossetti",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.PROFESSOR,
+                ra="DOC8801",
+                course="Departamento de Tecnologia e IA",
+                semester=None,
+                campus="Campus Liberdade",
+            ),
+            User(
+                ra_or_email="colaborador@fecap.br",
+                email="colaborador@fecap.br",
+                full_name="Carlos Operações Secretaria",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.COLABORADOR,
+                ra="COL7701",
+                course="Secretaria Geral e Atendimento",
+                semester=None,
+                campus="Campus Liberdade",
+            ),
+            User(
+                ra_or_email="atendente@fecap.br",
+                email="atendente@fecap.br",
+                full_name="Mariana Atendente ASA",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.ATENDENTE_ASA,
+                ra="AT9901",
+                course="Área de Sucesso Alvarista",
+                campus="Campus Liberdade",
+            ),
+            User(
+                ra_or_email="admin@fecap.br",
+                email="admin@fecap.br",
+                full_name="Coordenação Geral ASA",
+                hashed_password=get_password_hash("senha123"),
+                profile_type=ProfileType.ADMINISTRADOR,
+                ra="ADM001",
+                course="Diretoria Acadêmica",
+                campus="Campus Liberdade",
+            ),
+        ]
+        for u in default_seed_users:
+            if not db.query(User).filter(User.ra_or_email == u.ra_or_email).first():
+                db.add(u)
+        db.commit()
 
         # 2. Constrói e indexa a Base de Conhecimento vetorial RAG
         total_chunks = retriever.build_index(db=db)
@@ -132,6 +164,19 @@ app.include_router(feedback.router, prefix=settings.API_V1_PREFIX)
 app.include_router(escalations.router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard.router, prefix=settings.API_V1_PREFIX)
 
+# Monta arquivos estáticos do aplicativo interativo
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+@app.get("/app", tags=["Aplicação Web"])
+async def serve_app():
+    """Serve a interface gráfica interativa do aplicativo mobile."""
+    index_file = os.path.join(static_dir, "index.html")
+    return FileResponse(index_file)
+
+
 @app.get("/health", tags=["Sistema"])
 async def health_check():
     """Healthcheck simples para monitoramento e docker healthcheck."""
@@ -145,48 +190,16 @@ async def health_check():
     }
 
 
-# Monta arquivos e diretórios estáticos do Flutter Web
-static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    
-    assets_dir = os.path.join(static_dir, "assets")
-    if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-        
-    canvaskit_dir = os.path.join(static_dir, "canvaskit")
-    if os.path.exists(canvaskit_dir):
-        app.mount("/canvaskit", StaticFiles(directory=canvaskit_dir), name="canvaskit")
-
-    icons_dir = os.path.join(static_dir, "icons")
-    if os.path.exists(icons_dir):
-        app.mount("/icons", StaticFiles(directory=icons_dir), name="icons")
-
-    @app.get("/{file_name}.js", tags=["Flutter Web"])
-    async def serve_root_js(file_name: str):
-        target = os.path.join(static_dir, f"{file_name}.js")
-        if os.path.exists(target):
-            return FileResponse(target, media_type="application/javascript")
-        return FileResponse(os.path.join(static_dir, "index.html"))
-
-    @app.get("/{file_name}.json", tags=["Flutter Web"])
-    async def serve_root_json(file_name: str):
-        target = os.path.join(static_dir, f"{file_name}.json")
-        if os.path.exists(target):
-            return FileResponse(target, media_type="application/json")
-        return FileResponse(os.path.join(static_dir, "index.html"))
-
-    @app.get("/favicon.png", tags=["Flutter Web"])
-    async def serve_favicon():
-        fav = os.path.join(static_dir, "favicon.png")
-        if os.path.exists(fav):
-            return FileResponse(fav)
-        return FileResponse(os.path.join(static_dir, "index.html"))
-
-    @app.get("/app", tags=["Flutter Web"])
-    @app.get("/", tags=["Flutter Web"])
-    async def serve_flutter_app():
-        """Serve o aplicativo oficial Flutter Web."""
-        return FileResponse(os.path.join(static_dir, "index.html"))
-
-
+@app.get("/", tags=["Sistema"])
+async def root():
+    """Redireciona para o aplicativo interativo ou documentação."""
+    index_file = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {
+        "message": "Bem-vindo à API do ASA Connect+ (Área do Sucesso Alvarista - FECAP)",
+        "docs": "/docs",
+        "app": "/app",
+        "health": "/health",
+        "api_v1": settings.API_V1_PREFIX,
+    }

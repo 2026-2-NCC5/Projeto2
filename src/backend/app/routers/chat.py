@@ -104,7 +104,8 @@ def send_message(
 
     # 3. Executa o pipeline de RAG com explicabilidade e verificação de abstenção
     search_query = vision_info["search_query"] if vision_info else query_text
-    rag_result = rag_pipeline.answer_query(search_query)
+    user_profile = current_user.profile_type.value if hasattr(current_user, "profile_type") and current_user.profile_type else "ALUNO"
+    rag_result = rag_pipeline.answer_query(search_query, profile_type=user_profile)
 
     # Enriquecimento da resposta com a análise visual
     if vision_info:

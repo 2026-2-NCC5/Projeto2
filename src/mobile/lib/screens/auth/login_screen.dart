@@ -32,7 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
       defaultId = 'prof.almeida@fecap.br';
     } else if (widget.selectedProfile == 'ATENDENTE' || widget.selectedProfile == 'ATENDENTE_ASA') {
       defaultId = 'atendente@fecap.br';
-    } else if (widget.selectedProfile == 'COLABORADOR' || widget.selectedProfile == 'ADMINISTRADOR') {
+    } else if (widget.selectedProfile == 'COLABORADOR') {
+      defaultId = 'colaborador@fecap.br';
+    } else if (widget.selectedProfile == 'ADMINISTRADOR') {
       defaultId = 'admin@fecap.br';
     } else if (widget.selectedProfile == 'RESPONSAVEL') {
       defaultId = 'responsavel@fecap.br';
@@ -365,10 +367,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () => _fillCredentials('123456', 'senha123'),
                           ),
                           ActionChip(
+                            label: Text('Responsável', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
+                            onPressed: () => _fillCredentials('responsavel@fecap.br', 'senha123'),
+                          ),
+                          ActionChip(
                             label: Text('Prof. Almeida', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
                             backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
                             side: BorderSide(color: context.borderColor),
                             onPressed: () => _fillCredentials('prof.almeida@fecap.br', 'senha123'),
+                          ),
+                          ActionChip(
+                            label: Text('Colaborador', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
+                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+                            side: BorderSide(color: context.borderColor),
+                            onPressed: () => _fillCredentials('colaborador@fecap.br', 'senha123'),
                           ),
                           ActionChip(
                             label: Text('Atendente ASA', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
