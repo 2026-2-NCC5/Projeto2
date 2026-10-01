@@ -16,6 +16,8 @@ class RetrievedChunkSchema(BaseModel):
 class ChatQueryRequest(BaseModel):
     conversation_id: Optional[str] = None
     query: str
+    image_base64: Optional[str] = None
+    image_filename: Optional[str] = None
 
 
 class ChatMessageResponse(BaseModel):
@@ -23,6 +25,7 @@ class ChatMessageResponse(BaseModel):
     conversation_id: str
     sender: MessageSender
     content: str
+    image_url: Optional[str] = None
     is_abstained: bool = False
     confidence_score: Optional[float] = None
     threshold_used: Optional[float] = None

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:asa_connect/core/constants.dart';
@@ -7,6 +8,46 @@ class UserMessageBubble extends StatelessWidget {
   final ChatMessageModel message;
 
   const UserMessageBubble({super.key, required this.message});
+
+  Widget _buildImagePreview() {
+    if (message.imageUrl == null) return const SizedBox.shrink();
+
+    final url = message.imageUrl!;
+    if (url.startsWith('data:image/')) {
+      try {
+        final commaIdx = url.indexOf(',');
+        final b64 = commaIdx != -1 ? url.substring(commaIdx + 1) : url;
+        final bytes = base64Decode(b64);
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          constraints: const BoxConstraints(maxHeight: 200, maxWidth: 260),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white24, width: 1),
+          ),
+          child: Image.memory(bytes, fit: BoxFit.cover),
+        );
+      } catch (_) {
+        return const SizedBox.shrink();
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      constraints: const BoxConstraints(maxHeight: 200, maxWidth: 260),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white24, width: 1),
+      ),
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +88,20 @@ class UserMessageBubble extends StatelessWidget {
                 bottomRight: Radius.circular(16),
               ),
             ),
-            child: Text(
-              message.content,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-                height: 1.4,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildImagePreview(),
+                Text(
+                  message.content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

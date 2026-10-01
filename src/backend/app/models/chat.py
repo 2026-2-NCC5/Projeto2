@@ -35,6 +35,7 @@ class ChatMessage(Base):
     conversation_id = Column(String(36), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
     sender = Column(Enum(MessageSender), nullable=False)
     content = Column(Text, nullable=False)
+    image_url = Column(String(500), nullable=True)
 
     # Campos de Explicabilidade & RAG (RF06, RF10)
     is_abstained = Column(Boolean, default=False, nullable=False)

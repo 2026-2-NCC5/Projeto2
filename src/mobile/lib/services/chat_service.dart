@@ -10,11 +10,16 @@ class ChatService {
   Future<ChatMessageModel> sendMessage({
     required String query,
     String? conversationId,
+    String? imageBase64,
+    String? imageFilename,
   }) async {
-    final response = await _client.post('/chat', {
+    final Map<String, dynamic> body = {
       'query': query,
       if (conversationId != null) 'conversation_id': conversationId,
-    });
+      if (imageBase64 != null) 'image_base64': imageBase64,
+      if (imageFilename != null) 'image_filename': imageFilename,
+    };
+    final response = await _client.post('/chat', body);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));

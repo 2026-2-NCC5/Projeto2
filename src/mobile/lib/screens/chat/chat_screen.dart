@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:asa_connect/core/constants.dart';
@@ -70,6 +72,117 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
   }
 
+  Future<void> _showImagePreviewAndSendModal({
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    final commentController = TextEditingController();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryGreen, size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Analisar Erro ou Procedimento com IA',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: context.primaryTextColor,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'O ASA Connect examinará esta imagem para identificar o erro ou tela e fornecer a orientação oficial da FECAP.',
+              style: TextStyle(fontSize: 13, color: context.secondaryTextColor),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.borderColor),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.memory(bytes, fit: BoxFit.contain),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: commentController,
+              decoration: InputDecoration(
+                hintText: 'Alguma observação adicional? (opcional)...',
+                hintStyle: TextStyle(fontSize: 13, color: context.secondaryTextColor),
+                filled: true,
+                fillColor: context.inputFillColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                ),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.send_rounded, size: 18),
+              label: const Text(
+                'Enviar para Análise da IA',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+                chatProvider.sendImageMessage(
+                  imageBytes: bytes,
+                  filename: filename,
+                  caption: commentController.text.trim(),
+                );
+                _scrollToBottom();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _attachDocument() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -83,6 +196,21 @@ class _ChatScreenState extends State<ChatScreen> {
       final picked = result.files.first;
       if (!mounted) return;
 
+      final ext = (picked.extension ?? '').toLowerCase();
+
+      // Se for imagem (captura de tela ou foto de erro), usa a IA de Visão Multimodal
+      if (['png', 'jpg', 'jpeg'].contains(ext)) {
+        Uint8List? bytes = picked.bytes;
+        if (bytes == null && picked.path != null) {
+          bytes = await File(picked.path!).readAsBytes();
+        }
+        if (bytes != null) {
+          await _showImagePreviewAndSendModal(bytes: bytes, filename: picked.name);
+          return;
+        }
+      }
+
+      // Se for PDF ou outro arquivo formal, faz o upload documental padrão
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -93,7 +221,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text('Enviando e analisando ${picked.name}...')),
+              Expanded(child: Text('Enviando e validando ${picked.name}...')),
             ],
           ),
           duration: const Duration(seconds: 4),
@@ -120,9 +248,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
       chatProvider.sendMessage(
-        'Enviei o documento "${uploadResult.document.originalFilename}" para validação institucional no ASA Connect+. '
-        'Parecer do documento: ${uploadResult.aiFeedback ?? "Recebido"}. '
-        'Quais são as orientações e prazos da FECAP para este procedimento?',
+        'Enviei o documento "${uploadResult.document.originalFilename}" (${uploadResult.document.formattedSize}) para validação no ASA Connect+. '
+        'Quais são os critérios de conformidade e prazos da FECAP para este documento?',
       );
       _scrollToBottom();
     } catch (e) {

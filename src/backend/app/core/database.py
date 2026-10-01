@@ -30,6 +30,14 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Cria todas as tabelas no banco de dados se não existirem."""
+    """Cria todas as tabelas no banco de dados se não existirem e aplica migrações leves."""
     import app.models  # Garante o registro de todos os modelos
     Base.metadata.create_all(bind=engine)
+
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR(500);"))
+            conn.commit()
+        except Exception:
+            pass

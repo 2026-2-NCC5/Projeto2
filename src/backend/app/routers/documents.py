@@ -176,6 +176,24 @@ def download_student_document(
     return FileResponse(doc.file_path, filename=doc.original_filename, media_type=doc.mime_type)
 
 
+@router.get("/download-chat-image/{user_id}/{filename}")
+def download_chat_image(
+    user_id: int,
+    filename: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Serve uma imagem anexada no chat pelo aluno."""
+    file_path = os.path.join("uploads", "chat_images", str(user_id), filename)
+    if not os.path.exists(file_path):
+        file_path = os.path.join(UPLOAD_DIR, "chat_images", str(user_id), filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Imagem de chat não encontrada.",
+        )
+    return FileResponse(file_path)
+
+
 @router.get("/{slug}")
 def get_document_by_slug(
     slug: str,

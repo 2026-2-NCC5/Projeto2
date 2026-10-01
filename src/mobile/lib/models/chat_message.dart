@@ -3,6 +3,7 @@ class ChatMessageModel {
   final String conversationId;
   final String sender; // USER, AGENT, ATTENDANT
   final String content;
+  final String? imageUrl;
   final bool isAbstained;
   final double? confidenceScore;
   final double? thresholdUsed;
@@ -19,6 +20,7 @@ class ChatMessageModel {
     required this.conversationId,
     required this.sender,
     required this.content,
+    this.imageUrl,
     this.isAbstained = false,
     this.confidenceScore,
     this.thresholdUsed,
@@ -44,6 +46,7 @@ class ChatMessageModel {
       conversationId: json['conversation_id'] ?? '',
       sender: json['sender'] ?? 'AGENT',
       content: json['content'] ?? '',
+      imageUrl: json['image_url'] as String?,
       isAbstained: json['is_abstained'] ?? false,
       confidenceScore: json['confidence_score'] != null ? (json['confidence_score'] as num).toDouble() : null,
       thresholdUsed: json['threshold_used'] != null ? (json['threshold_used'] as num).toDouble() : null,
