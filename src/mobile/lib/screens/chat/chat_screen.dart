@@ -4,8 +4,10 @@ import 'package:asa_connect/core/constants.dart';
 import 'package:asa_connect/state/chat_provider.dart';
 import 'package:asa_connect/widgets/chat/agent_message_bubble.dart';
 import 'package:asa_connect/widgets/chat/user_message_bubble.dart';
-import 'package:asa_connect/widgets/common/app_header.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:asa_connect/services/document_service.dart';
 import 'package:asa_connect/services/tts_service.dart';
+import 'package:asa_connect/widgets/common/app_header.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? conversationId;
@@ -67,6 +69,75 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.clear();
     _scrollToBottom();
   }
+
+  Future<void> _attachDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final picked = result.files.first;
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Enviando e analisando ${picked.name}...')),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      final docService = DocumentService();
+      final uploadResult = await docService.uploadStudentDocument(
+        filePath: picked.path,
+        fileBytes: picked.bytes,
+        filename: picked.name,
+        category: 'Chat',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Documento ${picked.name} anexado com sucesso!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      chatProvider.sendMessage(
+        'Enviei o documento "${uploadResult.document.originalFilename}" para validação institucional no ASA Connect+. '
+        'Parecer do documento: ${uploadResult.aiFeedback ?? "Recebido"}. '
+        'Quais são as orientações e prazos da FECAP para este procedimento?',
+      );
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
 
   void _showEscalationDialog(BuildContext context, {String defaultReason = "Dúvida institucional"}) {
     final notesController = TextEditingController();
@@ -319,7 +390,7 @@ class _ChatScreenState extends State<ChatScreen> {
               border: Border(top: BorderSide(color: context.borderColor)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
@@ -332,11 +403,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   IconButton(
                     icon: const Icon(Icons.attach_file_rounded, color: AppColors.textMuted, size: 22),
                     tooltip: 'Anexar documento',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Seletor de anexos aberto: PDF ou JPG até 10MB.')),
-                      );
-                    },
+                    onPressed: _attachDocument,
                   ),
 
                   // Campo de Texto

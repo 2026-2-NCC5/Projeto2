@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -20,3 +21,22 @@ class KnowledgeDocument(Base):
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class StudentDocument(Base):
+    __tablename__ = "student_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    filename = Column(String(255), nullable=False)
+    original_filename = Column(String(255), nullable=False)
+    file_path = Column(String(500), nullable=False)
+    file_size = Column(Integer, nullable=False)  # Tamanho em bytes
+    mime_type = Column(String(100), nullable=False)
+    category = Column(String(100), default="Geral", nullable=False)  # Acadêmico, Matrícula, Financeiro, etc.
+    status = Column(String(50), default="RECEBIDO", nullable=False)  # RECEBIDO, EM_ANALISE, APROVADO, REJEITADO
+    analysis_notes = Column(Text, nullable=True)  # Observações ou parecer automático da IA
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    user = relationship("User", backref="student_documents")
+

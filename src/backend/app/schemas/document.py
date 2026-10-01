@@ -41,3 +41,26 @@ class DocumentChunkSchema(BaseModel):
     updated_at: str
     content: str
     similarity_score: float
+
+
+class StudentDocumentResponse(BaseModel):
+    id: int
+    user_id: int
+    filename: str
+    original_filename: str
+    file_size: int
+    mime_type: str
+    category: str
+    status: str
+    analysis_notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class StudentDocumentUploadResponse(BaseModel):
+    document: StudentDocumentResponse
+    message: str
+    ai_feedback: Optional[str] = None
+

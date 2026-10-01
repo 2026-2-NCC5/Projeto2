@@ -1,5 +1,5 @@
 from app.models.user import User, ProfileType
-from app.models.document import KnowledgeDocument
+from app.models.document import KnowledgeDocument, StudentDocument
 from app.models.chat import Conversation, ChatMessage, MessageSender
 from app.models.feedback import MessageFeedback
 from app.models.escalation import EscalationCase, EscalationStatus, EscalationPriority
@@ -9,6 +9,7 @@ __all__ = [
     "User",
     "ProfileType",
     "KnowledgeDocument",
+    "StudentDocument",
     "Conversation",
     "ChatMessage",
     "MessageSender",

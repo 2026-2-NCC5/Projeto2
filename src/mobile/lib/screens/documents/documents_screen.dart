@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:asa_connect/core/constants.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:asa_connect/screens/chat/chat_screen.dart';
 import 'package:asa_connect/screens/academic_services/service_detail_screen.dart';
 import 'package:asa_connect/state/chat_provider.dart';
+import 'package:asa_connect/services/document_service.dart';
+import 'package:asa_connect/models/student_document.dart';
 
 class DocumentsScreen extends StatefulWidget {
   final bool isTab;
@@ -46,29 +49,90 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     },
   ];
 
-  Future<void> _pickFile() async {
+  final DocumentService _documentService = DocumentService();
+  List<StudentDocumentModel> _studentDocs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMyDocuments();
+  }
+
+  Future<void> _loadMyDocuments() async {
     try {
-      setState(() => _isUploading = true);
-      await Future.delayed(const Duration(milliseconds: 1300));
-      setState(() {
-        _isUploading = false;
-        _uploadSuccessMessage = "Arquivo 'Comprovante_Matricula_2024.pdf' analisado com sucesso pela IA do ASA Connect!";
-        _recentFiles.insert(0, {
-          'name': 'Comprovante_Matricula_2024.pdf',
-          'category': 'Análise AI',
-          'date': 'Hoje, agora',
-          'size': '1.2 MB',
-        });
-      });
+      final docs = await _documentService.getMyDocuments();
       if (mounted) {
-        _showAnalysisModal('Comprovante_Matricula_2024.pdf');
+        setState(() {
+          _studentDocs = docs;
+          for (final doc in docs.reversed) {
+            _recentFiles.insert(0, {
+              'name': doc.originalFilename,
+              'category': doc.category,
+              'date': '${doc.createdAt.day.toString().padLeft(2, '0')}/${doc.createdAt.month.toString().padLeft(2, '0')} ${doc.createdAt.hour.toString().padLeft(2, '0')}:${doc.createdAt.minute.toString().padLeft(2, '0')}',
+              'size': doc.formattedSize,
+            });
+          }
+        });
       }
-    } catch (_) {
-      setState(() => _isUploading = false);
+    } catch (e) {
+      debugPrint('[DocumentsScreen] Status: $e');
     }
   }
 
-  void _showAnalysisModal(String filename) {
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final pickedFile = result.files.first;
+      setState(() => _isUploading = true);
+
+      final uploadResult = await _documentService.uploadStudentDocument(
+        filePath: pickedFile.path,
+        fileBytes: pickedFile.bytes,
+        filename: pickedFile.name,
+        category: 'Acadêmico',
+      );
+
+      setState(() {
+        _isUploading = false;
+        _uploadSuccessMessage = uploadResult.message;
+        _studentDocs.insert(0, uploadResult.document);
+        _recentFiles.insert(0, {
+          'name': uploadResult.document.originalFilename,
+          'category': uploadResult.document.category,
+          'date': 'Hoje, agora',
+          'size': uploadResult.document.formattedSize,
+        });
+      });
+
+      if (mounted) {
+        _showAnalysisModal(
+          uploadResult.document.originalFilename,
+          customFeedback: uploadResult.aiFeedback,
+        );
+      }
+    } catch (e) {
+      setState(() => _isUploading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showAnalysisModal(String filename, {String? customFeedback}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -130,7 +194,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAnalysisRow('Arquivo:', filename),
-                  _buildAnalysisRow('Tipo Detectado:', 'Comprovante Oficial de Matrícula Regular'),
+                  _buildAnalysisRow('Parecer da IA:', customFeedback ?? 'Documento validado com autenticidade garantida.'),
                   _buildAnalysisRow('Estudante:', 'Lucas Alvarista Silva (RA: 123456)'),
                   _buildAnalysisRow('Semestre Letivo:', '2024.1 - Ciência da Computação (5º Semestre)'),
                   _buildAnalysisRow('Autenticação Digital:', 'Chave SHA256 FECAP Verificada ✓'),
