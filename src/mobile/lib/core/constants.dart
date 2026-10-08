@@ -65,8 +65,8 @@ class AppConstants {
   static const String appName = "ASA Connect+";
   static const String institutionName = "ÁREA DO SUCESSO ALVARISTA FECAP";
   
-  // URL base padrão da API em nuvem (Render + Supabase)
-  static const String defaultApiBaseUrl = "https://projeto2-7gf7.onrender.com/api/v1";
+  // URL base padrão da API em nuvem (Fly.io - São Paulo gru - Zero hibernação)
+  static const String defaultApiBaseUrl = "https://asa-connect-api.fly.dev/api/v1";
 }
 
 class AppDarkColors {

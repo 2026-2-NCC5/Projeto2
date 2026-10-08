@@ -1,0 +1,13 @@
+.venv
+venv
+ENV
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.git
+.gitignore
+asaconnect.db
+uploads/*
+!uploads/.gitkeep
