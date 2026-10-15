@@ -1,0 +1,265 @@
+# flyctl launch added from .gitignore
+# ── Python & Virtualenv ────────────────────────────────────────────────────────
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/build
+**/develop-eggs
+**/dist
+**/downloads
+**/eggs
+**/.eggs
+**/parts
+**/sdist
+**/var
+**/wheels
+**/share/python-wheels
+**/*.egg-info
+**/.installed.cfg
+**/*.egg
+**/MANIFEST
+
+# Ambientes virtuais
+**/.venv
+**/venv
+**/env
+**/ENV
+**/env.bak
+**/venv.bak
+
+# Testes e cobertura
+**/.pytest_cache
+**/.coverage
+**/.coverage.*
+**/nosetests.xml
+**/coverage.xml
+**/*.cover
+**/*.py,cover
+**/htmlcov
+**/.mypy_cache
+
+# Banco de dados local SQLite
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.db-journal
+
+# ── Flutter & Dart ────────────────────────────────────────────────────────────
+**/.dart_tool
+**/.packages
+**/*.dill
+**/*.incremental.dill
+
+# Saída de compilação Flutter
+**/build
+**/ephemeral
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Android específico
+**/android/.gradle
+**/android/local.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/key.properties
+**/*.keystore
+**/*.jks
+
+# iOS específico
+**/ios/Pods
+**/ios/.symlinks
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+
+# Windows nativo Flutter
+**/windows/flutter/ephemeral
+**/windows/flutter/generated_plugins.cmake
+
+# Linux / macOS nativo
+**/linux/flutter/ephemeral
+**/macos/Flutter/ephemeral
+
+# ── Variáveis de Ambiente e Segredos ──────────────────────────────────────────
+**/.env
+**/.env.*
+!**/.env.example
+
+# ── Logs & Runtime ────────────────────────────────────────────────────────────
+**/logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/pids
+**/*.pid
+**/*.seed
+
+# ── IDE & Sistema Operacional ─────────────────────────────────────────────────
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+**/*.swp
+**/*.swo
+**/*~
+
+# VS Code (ignora cache/temp, preserva settings recomendadas se houver)
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+
+# JetBrains / IntelliJ
+**/.idea
+**/*.iml
+**/*.iws
+
+**/*.apk
+!**/ASA-Connect-Plus.apk
+
+
+# flyctl launch added from src/mobile/android/.gitignore
+src/mobile/android/**/gradle-wrapper.jar
+src/mobile/android/.gradle
+src/mobile/android/captures
+src/mobile/android/gradlew
+src/mobile/android/gradlew.bat
+src/mobile/android/local.properties
+src/mobile/android/**/GeneratedPluginRegistrant.java
+src/mobile/android/**/.cxx
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+src/mobile/android/**/key.properties
+src/mobile/android/**/**/*.keystore
+src/mobile/android/**/**/*.jks
+
+# flyctl launch added from src/mobile/ios/.gitignore
+src/mobile/ios/**/**/dgph
+src/mobile/ios/**/*.mode1v3
+src/mobile/ios/**/*.mode2v3
+src/mobile/ios/**/*.moved-aside
+src/mobile/ios/**/*.pbxuser
+src/mobile/ios/**/*.perspectivev3
+src/mobile/ios/**/**/*sync
+src/mobile/ios/**/.sconsign.dblite
+src/mobile/ios/**/.tags*
+src/mobile/ios/**/**/.vagrant
+src/mobile/ios/**/**/DerivedData
+src/mobile/ios/**/Icon?
+src/mobile/ios/**/**/Pods
+src/mobile/ios/**/**/.symlinks
+src/mobile/ios/**/profile
+src/mobile/ios/**/xcuserdata
+src/mobile/ios/**/**/.generated
+src/mobile/ios/**/Flutter/App.framework
+src/mobile/ios/**/Flutter/Flutter.framework
+src/mobile/ios/**/Flutter/Flutter.podspec
+src/mobile/ios/**/Flutter/Generated.xcconfig
+src/mobile/ios/**/Flutter/ephemeral
+src/mobile/ios/**/Flutter/app.flx
+src/mobile/ios/**/Flutter/app.zip
+src/mobile/ios/**/Flutter/flutter_assets
+src/mobile/ios/**/Flutter/flutter_export_environment.sh
+src/mobile/ios/**/ServiceDefinitions.json
+src/mobile/ios/**/Runner/GeneratedPluginRegistrant.*
+
+# Exceptions to above rules.
+!src/mobile/ios/**/default.mode1v3
+!src/mobile/ios/**/default.mode2v3
+!src/mobile/ios/**/default.pbxuser
+!src/mobile/ios/**/default.perspectivev3
+
+# flyctl launch added from src/mobile/windows/.gitignore
+src/mobile/windows/**/flutter/ephemeral
+
+# Visual Studio user-specific files.
+src/mobile/windows/**/*.suo
+src/mobile/windows/**/*.user
+src/mobile/windows/**/*.userosscache
+src/mobile/windows/**/*.sln.docstates
+
+# Visual Studio build-related files.
+src/mobile/windows/**/x64
+src/mobile/windows/**/x86
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+src/mobile/windows/**/*.[Cc]ache
+# but keep track of directories ending in .cache
+!src/mobile/windows/**/*.[Cc]ache
+
+# flyctl launch added from src/web/android/.gitignore
+src/web/android/**/gradle-wrapper.jar
+src/web/android/.gradle
+src/web/android/captures
+src/web/android/gradlew
+src/web/android/gradlew.bat
+src/web/android/local.properties
+src/web/android/**/GeneratedPluginRegistrant.java
+src/web/android/**/.cxx
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+src/web/android/**/key.properties
+src/web/android/**/**/*.keystore
+src/web/android/**/**/*.jks
+
+# flyctl launch added from src/web/ios/.gitignore
+src/web/ios/**/**/dgph
+src/web/ios/**/*.mode1v3
+src/web/ios/**/*.mode2v3
+src/web/ios/**/*.moved-aside
+src/web/ios/**/*.pbxuser
+src/web/ios/**/*.perspectivev3
+src/web/ios/**/**/*sync
+src/web/ios/**/.sconsign.dblite
+src/web/ios/**/.tags*
+src/web/ios/**/**/.vagrant
+src/web/ios/**/**/DerivedData
+src/web/ios/**/Icon?
+src/web/ios/**/**/Pods
+src/web/ios/**/**/.symlinks
+src/web/ios/**/profile
+src/web/ios/**/xcuserdata
+src/web/ios/**/**/.generated
+src/web/ios/**/Flutter/App.framework
+src/web/ios/**/Flutter/Flutter.framework
+src/web/ios/**/Flutter/Flutter.podspec
+src/web/ios/**/Flutter/Generated.xcconfig
+src/web/ios/**/Flutter/ephemeral
+src/web/ios/**/Flutter/app.flx
+src/web/ios/**/Flutter/app.zip
+src/web/ios/**/Flutter/flutter_assets
+src/web/ios/**/Flutter/flutter_export_environment.sh
+src/web/ios/**/ServiceDefinitions.json
+src/web/ios/**/Runner/GeneratedPluginRegistrant.*
+
+# Exceptions to above rules.
+!src/web/ios/**/default.mode1v3
+!src/web/ios/**/default.mode2v3
+!src/web/ios/**/default.pbxuser
+!src/web/ios/**/default.perspectivev3
+
+# flyctl launch added from src/web/windows/.gitignore
+src/web/windows/**/flutter/ephemeral
+
+# Visual Studio user-specific files.
+src/web/windows/**/*.suo
+src/web/windows/**/*.user
+src/web/windows/**/*.userosscache
+src/web/windows/**/*.sln.docstates
+
+# Visual Studio build-related files.
+src/web/windows/**/x64
+src/web/windows/**/x86
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+src/web/windows/**/*.[Cc]ache
+# but keep track of directories ending in .cache
+!src/web/windows/**/*.[Cc]ache
+fly.toml
