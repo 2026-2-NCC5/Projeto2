@@ -10,6 +10,8 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.chat import Conversation, ChatMessage, MessageSender
+from app.models.escalation import EscalationCase, EscalationStatus
+from app.models.escalation import EscalationCase, EscalationStatus
 from app.models.audit import AuditLog
 from app.schemas.chat import (
     ChatQueryRequest,
@@ -102,6 +104,63 @@ def send_message(
     db.add(user_msg)
     db.commit()
 
+    # Verifica se a conversa está sob atendimento humano ativo (PENDENTE ou EM_ATENDIMENTO)
+    active_escalation = db.query(EscalationCase).filter(
+        EscalationCase.conversation_id == conversation.id,
+        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
+    ).first()
+
+    if active_escalation:
+        # Silencia o bot de IA: o aluno está conversando diretamente com o atendente humano!
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        return ChatMessageResponse(
+            id=user_msg.id,
+            conversation_id=conversation.id,
+            sender=MessageSender.USER,
+            content=user_msg.content,
+            image_url=user_msg.image_url,
+            is_abstained=False,
+            confidence_score=1.0,
+            threshold_used=0.0,
+            retrieved_chunks=[],
+            source_citation="Atendimento Humano ASA",
+            suggested_action=None,
+            agent_version="humano",
+            is_helpful=None,
+            feedback_comment=None,
+            created_at=user_msg.created_at,
+        )
+
+    # Verifica se a conversa está sob atendimento humano ativo (PENDENTE ou EM_ATENDIMENTO)
+    active_escalation = db.query(EscalationCase).filter(
+        EscalationCase.conversation_id == conversation.id,
+        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
+    ).first()
+
+    if active_escalation:
+        # Silencia o bot de IA: o aluno está conversando diretamente com o atendente humano!
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        return ChatMessageResponse(
+            id=user_msg.id,
+            conversation_id=conversation.id,
+            sender=MessageSender.USER,
+            content=user_msg.content,
+            image_url=user_msg.image_url,
+            is_abstained=False,
+            confidence_score=1.0,
+            threshold_used=0.0,
+            retrieved_chunks=[],
+            source_citation="Atendimento Humano ASA",
+            suggested_action=None,
+            agent_version="humano",
+            is_helpful=None,
+            feedback_comment=None,
+            created_at=user_msg.created_at,
+        )
+
+
     # 3. Executa o pipeline de RAG com explicabilidade e verificação de abstenção
     search_query = vision_info["search_query"] if vision_info else query_text
     user_profile = current_user.profile_type.value if hasattr(current_user, "profile_type") and current_user.profile_type else "ALUNO"
@@ -182,7 +241,10 @@ def list_user_conversations(
     """
     conversations = (
         db.query(Conversation)
-        .filter(Conversation.user_id == current_user.id)
+        .filter(
+            Conversation.user_id == current_user.id,
+            Conversation.is_deleted_by_user.is_(False),
+        )
         .order_by(Conversation.updated_at.desc())
         .all()
     )
@@ -238,7 +300,10 @@ def delete_conversation(
     db: Session = Depends(get_db),
 ):
     """
-    Exclui uma conversa e suas mensagens associadas.
+    Permite ao estudante ocultar/limpar a conversa do seu aplicativo.
+    Condições de segurança e auditoria (RF08, RF09, RF10):
+    1. Se houver uma senha/chamado ativo em andamento (PENDENTE ou EM_ATENDIMENTO), a exclusão é PROIBIDA para não prejudicar o atendimento.
+    2. Não apaga os registros do banco de dados (Soft Delete): os dados permanecem preservados para auditoria, métricas e histórico da instituição.
     """
     conversation = db.query(Conversation).filter(
         Conversation.id == conversation_id,
@@ -251,6 +316,19 @@ def delete_conversation(
             detail="Conversa não encontrada.",
         )
 
-    db.delete(conversation)
+    # Condição: verifica se há chamado/senha ativa atrelada a esta conversa
+    active_ticket = db.query(EscalationCase).filter(
+        EscalationCase.conversation_id == conversation_id,
+        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
+    ).first()
+
+    if active_ticket:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Não é permitido apagar esta conversa enquanto a senha ({active_ticket.ticket_number or 'ativa'}) estiver em atendimento no ASA. Aguarde o encerramento do chamado.",
+        )
+
+    # Soft delete: oculta do usuário, mas preserva no banco de dados para auditoria institucional
+    conversation.is_deleted_by_user = True
     db.commit()
-    return {"message": "Conversa removida com sucesso.", "success": True}
+    return {"message": "Conversa removida do seu aplicativo com sucesso.", "success": True}

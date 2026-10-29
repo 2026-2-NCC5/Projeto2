@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:asa_connect/models/chat_message.dart';
 import 'package:asa_connect/models/conversation.dart';
 import 'package:asa_connect/services/chat_service.dart';
+import 'package:asa_connect/models/escalation.dart';
 
 class ChatProvider with ChangeNotifier {
   final ChatService _chatService = ChatService();
@@ -21,6 +22,16 @@ class ChatProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSending => _isSending;
   String? get errorMessage => _errorMessage;
+
+  void clearChat() {
+    _activeConversationId = null;
+    _messages = [];
+    _conversations = [];
+    _errorMessage = null;
+    _isLoading = false;
+    _isSending = false;
+    notifyListeners();
+  }
 
   void startNewChat() {
     _activeConversationId = null;
@@ -50,6 +61,16 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
+  Future<void> deleteConversation(String conversationId) async {
+    await _chatService.deleteConversation(conversationId);
+    _conversations.removeWhere((c) => c.id == conversationId);
+    if (_activeConversationId == conversationId) {
+      clearChat();
+    } else {
+      notifyListeners();
+    }
+  }
+
   Future<void> loadConversation(String conversationId) async {
     try {
       _isLoading = true;
@@ -63,6 +84,17 @@ class ChatProvider with ChangeNotifier {
       _errorMessage = e.toString();
       notifyListeners();
     }
+  }
+
+  Future<void> refreshActiveConversationSilently() async {
+    if (_activeConversationId == null || _isSending) return;
+    try {
+      final latestMessages = await _chatService.getConversationMessages(_activeConversationId!);
+      if (latestMessages.length != _messages.length) {
+        _messages = latestMessages;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   Future<void> sendMessage(String text) async {
@@ -172,17 +204,33 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> escalateToHuman(String reason, {String? userNotes}) async {
-    if (_activeConversationId == null) return false;
+  Future<EscalationModel?> escalateToHuman(
+    String reason, {
+    String? userNotes,
+    String modality = 'ONLINE',
+    String priority = 'MEDIA',
+  }) async {
     try {
-      await _chatService.escalateToHuman(
+      // Se não tiver conversa ativa, envia uma mensagem inicial para criar uma conversa no backend
+      if (_activeConversationId == null) {
+        final initialMsg = await _chatService.sendMessage(
+          query: 'Solicitação de atendimento com o ASA ($modality).',
+        );
+        _activeConversationId = initialMsg.conversationId;
+        _messages.add(initialMsg);
+        notifyListeners();
+      }
+
+      final model = await _chatService.escalateToHuman(
         conversationId: _activeConversationId!,
         reason: reason,
         userNotes: userNotes,
+        modality: modality,
+        priority: priority,
       );
-      return true;
+      return model;
     } catch (e) {
-      return false;
+      return null;
     }
   }
 }

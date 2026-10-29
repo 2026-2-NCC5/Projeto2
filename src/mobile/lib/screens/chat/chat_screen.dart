@@ -1,3 +1,5 @@
+import 'package:asa_connect/services/chat_service.dart';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -10,11 +12,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:asa_connect/services/document_service.dart';
 import 'package:asa_connect/services/tts_service.dart';
 import 'package:asa_connect/widgets/common/app_header.dart';
+import 'package:asa_connect/core/responsive_breakpoints.dart';
+import 'package:asa_connect/widgets/chat/asa_ticket_modal.dart';
+import 'package:asa_connect/widgets/chat/rating_dialog.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? conversationId;
+  final bool isEmbedded;
 
-  const ChatScreen({super.key, this.conversationId});
+  const ChatScreen({super.key, this.conversationId, this.isEmbedded = false});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -23,6 +29,30 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Timer? _pollingTimer;
+  bool _hasPromptedRating = false;
+  final ChatService _chatService = ChatService();
+
+  Future<void> _checkIfEscalationResolved() async {
+    if (_hasPromptedRating) return;
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final convId = chatProvider.activeConversationId;
+    if (convId == null || convId.isEmpty) return;
+
+    try {
+      final escalation = await _chatService.getEscalationByConversation(convId);
+      if (escalation != null && escalation.status == 'RESOLVIDO' && escalation.serviceRating == null) {
+        _hasPromptedRating = true;
+        if (mounted) {
+          RatingDialog.show(
+            context,
+            caseId: escalation.id,
+            attendantName: escalation.assignedAttendantName ?? 'Atendente ASA',
+          );
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -33,10 +63,19 @@ class _ChatScreenState extends State<ChatScreen> {
         chatProvider.loadConversation(widget.conversationId!);
       }
     });
+
+    // Atualiza mensagens automaticamente a cada 3 segundos e verifica se o atendimento foi finalizado
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        Provider.of<ChatProvider>(context, listen: false).refreshActiveConversationSilently();
+        _checkIfEscalationResolved();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     try {
       Provider.of<TtsService>(context, listen: false).stop();
     } catch (_) {}
@@ -267,68 +306,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
   void _showEscalationDialog(BuildContext context, {String defaultReason = "Dúvida institucional"}) {
-    final notesController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.headset_mic_rounded, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Falar com o ASA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Deseja transferir esta conversa para a fila de atendimento humano do ASA?',
-              style: TextStyle(fontSize: 13, color: AppColors.textBody),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: notesController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Detalhes da sua dúvida para o atendente (opcional)...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
-            onPressed: () async {
-              final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-              final success = await chatProvider.escalateToHuman(
-                defaultReason,
-                userNotes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
-              );
-              if (!mounted) return;
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    success
-                        ? 'Solicitação enviada! Um atendente do ASA entrará em contato.'
-                        : 'Você precisa enviar uma mensagem antes de escalonar a conversa.',
-                  ),
-                  backgroundColor: success ? AppColors.success : AppColors.error,
-                ),
-              );
-            },
-            child: const Text('Confirmar Transferência'),
-          ),
-        ],
-      ),
-    );
+    AsaTicketModal.show(context, defaultReason: defaultReason);
   }
 
   void _showSessionInfoDialog(BuildContext context, ChatProvider chatProvider) {
@@ -378,6 +356,81 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _confirmDeleteChat(BuildContext context, ChatProvider chatProvider) {
+    final convId = chatProvider.activeConversationId;
+    if (convId == null || convId.isEmpty) {
+      chatProvider.clearChat();
+      chatProvider.startNewChat();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conversa limpa com sucesso.')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Apagar Conversa'),
+          ],
+        ),
+        content: const Text(
+          'Deseja apagar esta conversa do seu aplicativo?\n\n'
+          '⚠️ Nota: Se você possuir uma senha ou atendimento em andamento no ASA, '
+          'a conversa não poderá ser apagada até o encerramento do chamado.',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await chatProvider.deleteConversation(convId);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Conversa apagada com sucesso.'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    chatProvider.startNewChat();
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      backgroundColor: AppColors.error,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Confirmar e Apagar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
@@ -389,6 +442,7 @@ class _ChatScreenState extends State<ChatScreen> {
         variant: AppHeaderVariant.chat,
         title: 'ASA Connect IA',
         subtitle: 'Online • FECAP',
+        leading: widget.isEmbedded ? const SizedBox.shrink() : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.headset_mic_rounded, color: Colors.white, size: 20),
@@ -407,6 +461,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 _showEscalationDialog(context);
               } else if (val == 'info') {
                 _showSessionInfoDialog(context, chatProvider);
+              } else if (val == 'delete') {
+                _confirmDeleteChat(context, chatProvider);
               }
             },
             itemBuilder: (context) => [
@@ -440,6 +496,16 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Apagar Conversa', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -448,7 +514,10 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // Lista de Mensagens
           Expanded(
-            child: ListView.builder(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: ResponsiveBreakpoints.maxChatColumnWidth),
+                child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               itemCount: messages.length + (chatProvider.isSending ? 1 : 0),
@@ -457,6 +526,53 @@ class _ChatScreenState extends State<ChatScreen> {
                   final msg = messages[index];
                   if (msg.sender == 'USER') {
                     return UserMessageBubble(message: msg);
+                  } else if (msg.sender == 'ATTENDANT') {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF005C4B),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.support_agent_rounded, size: 20, color: Colors.white),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE7FFDB),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFF25D366).withValues(alpha: 0.3)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Atendente Humano ASA',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Color(0xFF075E54),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    msg.content,
+                                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   } else {
                     return AgentMessageBubble(
                       message: msg,
@@ -507,7 +623,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
               },
             ),
-          ),
+          ))),
 
           // Barra de Input Inferior (Figma tela 11)
           Container(
@@ -524,73 +640,78 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
             child: SafeArea(
-              child: Row(
-                children: [
-                  // Ícone de Anexo
-                  IconButton(
-                    icon: const Icon(Icons.attach_file_rounded, color: AppColors.textMuted, size: 22),
-                    tooltip: 'Anexar documento',
-                    onPressed: _attachDocument,
-                  ),
-
-                  // Campo de Texto
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: context.borderColor),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: ResponsiveBreakpoints.maxChatColumnWidth),
+                  child: Row(
+                    children: [
+                      // Ícone de Anexo
+                      IconButton(
+                        icon: const Icon(Icons.attach_file_rounded, color: AppColors.textMuted, size: 22),
+                        tooltip: 'Anexar documento',
+                        onPressed: _attachDocument,
                       ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: TextField(
-                              controller: _textController,
-                              style: TextStyle(fontSize: 14, color: context.primaryTextColor),
-                              textCapitalization: TextCapitalization.sentences,
-                              decoration: InputDecoration(
-                                hintText: 'Digite sua mensagem...',
-                                hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 13),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+
+                      // Campo de Texto
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: context.borderColor),
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: TextField(
+                                  controller: _textController,
+                                  style: TextStyle(fontSize: 14, color: context.primaryTextColor),
+                                  textCapitalization: TextCapitalization.sentences,
+                                  decoration: InputDecoration(
+                                    hintText: 'Digite sua mensagem...',
+                                    hintStyle: TextStyle(color: context.secondaryTextColor, fontSize: 13),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                  onSubmitted: (_) => _sendMessage(),
+                                ),
                               ),
-                              onSubmitted: (_) => _sendMessage(),
-                            ),
+                              // Ícone Microfone
+                              IconButton(
+                                icon: const Icon(Icons.mic_none_rounded, color: AppColors.textMuted, size: 20),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Comando de voz ativado (microfone institucional).')),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                          // Ícone Microfone
-                          IconButton(
-                            icon: const Icon(Icons.mic_none_rounded, color: AppColors.textMuted, size: 20),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Comando de voz ativado (microfone institucional).')),
-                              );
-                            },
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                  // Botão de Envio (Círculo Verde)
-                  GestureDetector(
-                    onTap: _sendMessage,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryGreen,
-                        shape: BoxShape.circle,
+                      // Botão de Envio (Círculo Verde)
+                      GestureDetector(
+                        onTap: _sendMessage,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryGreen,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
+                          ),
+                        ),
                       ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 20),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
