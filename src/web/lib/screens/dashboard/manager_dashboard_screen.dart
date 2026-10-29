@@ -1,3 +1,5 @@
+import 'package:asa_connect/screens/dashboard/attendant_chat_screen.dart';
+import 'package:asa_connect/models/escalation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:asa_connect/core/constants.dart';
@@ -16,6 +18,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   final ApiClient _client = ApiClient();
 
   bool _isLoading = true;
+  bool _showTodayOnly = true;
   Map<String, dynamic>? _stats;
   List<dynamic> _escalations = [];
   List<dynamic> _documents = [];
@@ -44,7 +47,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     try {
       final results = await Future.wait([
         _client.get('/dashboard/stats'),
-        _client.get('/escalations'),
+        _client.get(_showTodayOnly ? '/escalations?today_only=true' : '/escalations'),
         _client.get('/documents?active_only=false'),
         _client.get('/dashboard/audit-logs?limit=15'),
       ]);
@@ -452,29 +455,95 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   }
 
   Widget _buildEscalationsTab() {
-    if (_escalations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.done_all_rounded, size: 48, color: Colors.green.shade300),
-            const SizedBox(height: 12),
-            Text('Nenhum caso pendente na fila humana do ASA.', style: TextStyle(color: context.secondaryTextColor)),
-          ],
-        ),
-      );
-    }
-
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: context.isDesktop ? 860 : double.infinity),
-        child: ListView.separated(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.isDesktop ? 32 : 16,
-            vertical: 20,
-          ),
-          itemCount: _escalations.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+        child: Column(
+          children: [
+            // Barra de Filtro Operacional vs Histórico Geral
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.isDesktop ? 32 : 16,
+                vertical: 12,
+              ),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.today_rounded, size: 16),
+                        SizedBox(width: 6),
+                        Text('Fila de Hoje (Operacional)'),
+                      ],
+                    ),
+                    selected: _showTodayOnly,
+                    selectedColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontWeight: _showTodayOnly ? FontWeight.bold : FontWeight.normal,
+                      color: _showTodayOnly ? AppColors.primaryGreen : context.secondaryTextColor,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _showTodayOnly = true);
+                        _loadDashboardData();
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.history_rounded, size: 16),
+                        SizedBox(width: 6),
+                        Text('Histórico Completo'),
+                      ],
+                    ),
+                    selected: !_showTodayOnly,
+                    selectedColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontWeight: !_showTodayOnly ? FontWeight.bold : FontWeight.normal,
+                      color: !_showTodayOnly ? AppColors.primaryGreen : context.secondaryTextColor,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _showTodayOnly = false);
+                        _loadDashboardData();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            if (_escalations.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.done_all_rounded, size: 48, color: Colors.green.shade300),
+                      const SizedBox(height: 12),
+                      Text(
+                        _showTodayOnly
+                            ? 'Nenhum atendimento na fila de hoje até o momento.'
+                            : 'Nenhum chamado registrado no histórico.',
+                        style: TextStyle(color: context.secondaryTextColor),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.isDesktop ? 32 : 16,
+                    vertical: 8,
+                  ),
+                  itemCount: _escalations.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final esc = _escalations[index];
             final isResolved = esc['status'] == 'RESOLVIDO';
@@ -521,17 +590,90 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
               ),
               const SizedBox(height: 10),
 
-              Text(
-                'Estudante: ${esc['student_name']} (RA: ${esc['student_ra'] ?? "N/A"})',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      esc['ticket_number'] ?? '#${esc['id']}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryGreen,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${esc['student_name']} (RA: ${esc['student_ra'] ?? "N/A"})',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${esc['student_course'] ?? "Curso"} • ${esc['student_semester'] ?? 1}º Semestre • ${esc['student_campus'] ?? "Campus Liberdade"}',
+                          style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (esc['modality'] == 'PRESENCIAL')
+                          ? Colors.purple.withValues(alpha: 0.15)
+                          : Colors.blue.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      (esc['modality'] == 'PRESENCIAL') ? '🏢 Presencial (Mesa)' : '💬 Chat Online',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: (esc['modality'] == 'PRESENCIAL') ? Colors.purple : Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, color: context.primaryTextColor)),
+              const SizedBox(height: 10),
+              if (esc['student_email'] != null) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.mail_outline_rounded, size: 14, color: AppColors.primaryGreen),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Email: ${esc['student_email']}',
+                      style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
+              Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
               if (esc['user_notes'] != null) ...[
                 const SizedBox(height: 4),
-                Text(
-                  'Dúvida: "${esc['user_notes']}"',
-                  style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.secondaryTextColor),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.inputFillColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Relato do Aluno: "${esc['user_notes']}"',
+                    style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.primaryTextColor),
+                  ),
                 ),
               ],
 
@@ -550,25 +692,89 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 ),
               ],
 
-              if (!isResolved) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
-                    label: const Text('Atender / Resolver Caso', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: () => _resolveEscalation(esc['id']),
+              if (isResolved && esc['service_rating'] != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Avaliação do Aluno: ${esc['service_rating']} / 5 estrelas',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                      ),
+                      if (esc['service_rating_comment'] != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '"${esc['service_rating_comment']}"',
+                            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.primaryTextColor),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
+
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF005C4B),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      icon: const Icon(Icons.chat_rounded, size: 16),
+                      label: const Text('💬 Chat do Atendente', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      onPressed: () async {
+                        final escModel = EscalationModel.fromJson(esc);
+                        final res = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AttendantChatScreen(escalation: escModel),
+                          ),
+                        );
+                        if (res == true) {
+                          _loadDashboardData();
+                        }
+                      },
+                    ),
+                  ),
+                  if (!isResolved) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryGreen,
+                          side: const BorderSide(color: AppColors.primaryGreen),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                        label: const Text('Encerrar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () => _resolveEscalation(esc['id']),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         );
       },
+                ),
+              ),
+          ],
         ),
       ),
     );

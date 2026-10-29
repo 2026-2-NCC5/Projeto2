@@ -262,4 +262,3 @@ src/web/windows/**/x86
 src/web/windows/**/*.[Cc]ache
 # but keep track of directories ending in .cache
 !src/web/windows/**/*.[Cc]ache
-fly.toml

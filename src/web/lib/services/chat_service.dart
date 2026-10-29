@@ -63,14 +63,26 @@ class ChatService {
     });
   }
 
+  Future<Map<String, dynamic>> getOperatingStatus() async {
+    final response = await _client.get('/escalations/status-hours');
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    }
+    return {'is_open': false, 'message': 'Atendimento do ASA'};
+  }
+
   Future<EscalationModel> escalateToHuman({
     required String conversationId,
     required String reason,
     String? userNotes,
+    String modality = 'ONLINE',
+    String priority = 'MEDIA',
   }) async {
     final response = await _client.post('/escalations', {
       'conversation_id': conversationId,
       'reason': reason,
+      'modality': modality,
+      'priority': priority,
       if (userNotes != null) 'user_notes': userNotes,
     });
 
@@ -81,5 +93,106 @@ class ChatService {
       final errorData = jsonDecode(utf8.decode(response.bodyBytes));
       throw Exception(errorData['detail'] ?? 'Erro ao solicitar atendimento humano.');
     }
+  }
+
+  // --- Endpoints para Chat ao Vivo do Atendente & Avaliação ---
+
+  Future<List<Map<String, dynamic>>> getEscalationMessages(int caseId) async {
+    final response = await _client.get('/escalations/$caseId/messages');
+    if (response.statusCode == 200) {
+      final List<dynamic> list = jsonDecode(utf8.decode(response.bodyBytes));
+      return List<Map<String, dynamic>>.from(list);
+    } else {
+      throw Exception('Erro ao carregar mensagens do atendimento.');
+    }
+  }
+
+  Future<Map<String, dynamic>> sendAttendantMessage(int caseId, String content) async {
+    final response = await _client.post('/escalations/$caseId/messages', {
+      'content': content,
+    });
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(errorData['detail'] ?? 'Erro ao enviar mensagem.');
+    }
+  }
+
+  Future<EscalationModel> startAttendance(int caseId) async {
+    final response = await _client.patch('/escalations/$caseId/start', {});
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return EscalationModel.fromJson(data);
+    } else {
+      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(errorData['detail'] ?? 'Erro ao iniciar atendimento.');
+    }
+  }
+
+  Future<EscalationModel> resolveEscalation(int caseId, String notes) async {
+    final response = await _client.patch('/escalations/$caseId/resolve', {
+      'resolution_notes': notes,
+      'status': 'RESOLVIDO',
+    });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return EscalationModel.fromJson(data);
+    } else {
+      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(errorData['detail'] ?? 'Erro ao encerrar atendimento.');
+    }
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    final response = await _client.delete('/chat/conversations/$conversationId');
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(errorData['detail'] ?? 'Erro ao remover conversa.');
+    }
+  }
+
+  Future<void> rateEscalation(int caseId, int rating, {String? comment}) async {
+    final response = await _client.post('/escalations/$caseId/rate', {
+      'rating': rating,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    });
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(errorData['detail'] ?? 'Erro ao enviar avaliação.');
+    }
+  }
+
+  Future<EscalationModel?> getMyActiveEscalation() async {
+    final response = await _client.get('/escalations/active-mine');
+    if (response.statusCode == 200) {
+      if (response.body.isEmpty || response.body == 'null') return null;
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return EscalationModel.fromJson(data);
+    }
+    return null;
+  }
+
+  Future<EscalationModel?> getEscalationByConversation(String conversationId) async {
+    final response = await _client.get('/escalations/by-conversation/$conversationId');
+    if (response.statusCode == 200) {
+      if (response.body.isEmpty || response.body == 'null') return null;
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return EscalationModel.fromJson(data);
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> getSatisfactionStats() async {
+    final response = await _client.get('/escalations/stats/satisfaction');
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    }
+    return {
+      'average_rating': 0.0,
+      'total_rated': 0,
+      'distribution': {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
+      'csat_percent': 0.0,
+    };
   }
 }

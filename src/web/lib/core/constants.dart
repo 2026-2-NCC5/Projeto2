@@ -66,7 +66,7 @@ class AppConstants {
   static const String institutionName = "ÁREA DO SUCESSO ALVARISTA FECAP";
   
   // URL base padrão da API em nuvem (Fly.io - São Paulo gru - Zero hibernação)
-  static const String defaultApiBaseUrl = "https://asa-connect-api.fly.dev/api/v1";
+  static const String defaultApiBaseUrl = "http://localhost:8080/api/v1";
 }
 
 class AppDarkColors {

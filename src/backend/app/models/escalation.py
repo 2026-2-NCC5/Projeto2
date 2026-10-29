@@ -12,6 +12,11 @@ class EscalationStatus(str, enum.Enum):
     CANCELADO = "CANCELADO"
 
 
+class AttendanceModality(str, enum.Enum):
+    PRESENCIAL = "PRESENCIAL"
+    ONLINE = "ONLINE"
+
+
 class EscalationPriority(str, enum.Enum):
     BAIXA = "BAIXA"
     MEDIA = "MEDIA"
@@ -23,6 +28,8 @@ class EscalationCase(Base):
     __tablename__ = "escalation_cases"
 
     id = Column(Integer, primary_key=True, index=True)
+    ticket_number = Column(String(20), nullable=True, index=True)  # ex: P001 ou O002
+    modality = Column(String(20), default="ONLINE", nullable=False)  # PRESENCIAL ou ONLINE
     conversation_id = Column(String(36), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, unique=True)
     student_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     assigned_attendant_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -38,6 +45,8 @@ class EscalationCase(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     resolved_at = Column(DateTime, nullable=True)
+    service_rating = Column(Integer, nullable=True)  # Avaliacao de 1 a 5 estrelas
+    service_rating_comment = Column(Text, nullable=True)  # Feedback opcional do aluno
 
     # Relacionamentos
     conversation = relationship("Conversation", back_populates="escalation_case")

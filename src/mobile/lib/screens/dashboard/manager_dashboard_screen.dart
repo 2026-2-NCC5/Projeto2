@@ -1,6 +1,9 @@
+import 'package:asa_connect/screens/dashboard/attendant_chat_screen.dart';
+import 'package:asa_connect/models/escalation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:asa_connect/core/constants.dart';
+import 'package:asa_connect/core/responsive_breakpoints.dart';
 import 'package:asa_connect/services/api_client.dart';
 
 class ManagerDashboardScreen extends StatefulWidget {
@@ -15,6 +18,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   final ApiClient _client = ApiClient();
 
   bool _isLoading = true;
+  bool _showTodayOnly = true;
   Map<String, dynamic>? _stats;
   List<dynamic> _escalations = [];
   List<dynamic> _documents = [];
@@ -43,7 +47,7 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     try {
       final results = await Future.wait([
         _client.get('/dashboard/stats'),
-        _client.get('/escalations'),
+        _client.get(_showTodayOnly ? '/escalations?today_only=true' : '/escalations'),
         _client.get('/documents?active_only=false'),
         _client.get('/dashboard/audit-logs?limit=15'),
       ]);
@@ -213,134 +217,121 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
     final abstentionRate = (_stats!['abstention_rate'] as num).toDouble();
     final satisfactionRate = (_stats!['feedback']['satisfaction_rate'] as num).toDouble();
     final categories = (_stats!['top_categories'] as List<dynamic>?) ?? [];
+    final isDesktop = context.isDesktop;
 
-    return SingleChildScrollView(
+    // The 4 KPI card definitions (shared for both layouts)
+    final kpiCards = [
+      _buildKpiCard(
+        title: 'TOTAL DE CONVERSAS',
+        value: '${_stats!['total_conversations']}',
+        subtitle: '${_stats!['total_messages']} mensagens processadas',
+        icon: Icons.chat_rounded,
+        color: AppColors.primaryGreen,
+      ),
+      _buildKpiCard(
+        title: 'TAXA DE ABSTENÇÃO',
+        value: '$abstentionRate%',
+        subtitle: '${_stats!['total_abstentions']} abstenções seguras',
+        icon: Icons.shield_outlined,
+        color: abstentionRate > 30 ? AppColors.abstentionAmber : AppColors.accentEmerald,
+      ),
+      _buildKpiCard(
+        title: 'ÍNDICE DE SATISFAÇÃO',
+        value: '$satisfactionRate%',
+        subtitle: '${_stats!['feedback']['helpful_count']} úteis / ${_stats!['feedback']['unhelpful_count']} não úteis',
+        icon: Icons.thumb_up_alt_outlined,
+        color: AppColors.accentEmerald,
+      ),
+      _buildKpiCard(
+        title: 'FILA DE ATENDIMENTO',
+        value: '${_stats!['pending_escalations']}',
+        subtitle: '${_stats!['resolved_escalations']} casos resolvidos',
+        icon: Icons.people_outline_rounded,
+        color: _stats!['pending_escalations'] > 0 ? AppColors.error : AppColors.primaryGreen,
+      ),
+    ];
+
+    // Shared category distribution widget
+    Widget categoriesCard = Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Indicadores de Qualidade e Operação (RF11)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+            'Distribuição por Categorias',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryTextColor),
           ),
           const SizedBox(height: 12),
-
-          // Grid de 4 KPIs
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.6,
-            children: [
-              _buildKpiCard(
-                title: 'TOTAL DE CONVERSAS',
-                value: '${_stats!['total_conversations']}',
-                subtitle: '${_stats!['total_messages']} mensagens processadas',
-                icon: Icons.chat_rounded,
-                color: AppColors.primaryGreen,
-              ),
-              _buildKpiCard(
-                title: 'TAXA DE ABSTENÇÃO',
-                value: '$abstentionRate%',
-                subtitle: '${_stats!['total_abstentions']} abstenções seguras',
-                icon: Icons.shield_outlined,
-                color: abstentionRate > 30 ? AppColors.abstentionAmber : AppColors.accentEmerald,
-              ),
-              _buildKpiCard(
-                title: 'ÍNDICE DE SATISFAÇÃO',
-                value: '$satisfactionRate%',
-                subtitle: '${_stats!['feedback']['helpful_count']} úteis / ${_stats!['feedback']['unhelpful_count']} não úteis',
-                icon: Icons.thumb_up_alt_outlined,
-                color: AppColors.accentEmerald,
-              ),
-              _buildKpiCard(
-                title: 'FILA DE ATENDIMENTO',
-                value: '${_stats!['pending_escalations']}',
-                subtitle: '${_stats!['resolved_escalations']} casos resolvidos',
-                icon: Icons.people_outline_rounded,
-                color: _stats!['pending_escalations'] > 0 ? AppColors.error : AppColors.primaryGreen,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Tópicos Mais Frequentes
-          Text(
-            'Distribuição por Categorias da Base',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
-          ),
-          const SizedBox(height: 10),
-
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.borderColor),
-            ),
-            child: Column(
-              children: categories.map((cat) {
-                final pct = (cat['percentage'] as num).toDouble();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          ...categories.map((cat) {
+            final pct = (cat['percentage'] as num).toDouble();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            cat['category'],
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryTextColor),
-                          ),
-                          Text(
-                            '$pct% (${cat['count']} docs)',
-                            style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
-                          ),
-                        ],
+                      Text(
+                        cat['category'],
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                       ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: pct / 100,
-                          minHeight: 6,
-                          backgroundColor: context.inputFillColor,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                        ),
+                      Text(
+                        '$pct% (${cat['count']} docs)',
+                        style: TextStyle(fontSize: 10, color: context.secondaryTextColor),
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: pct / 100,
+                      minHeight: 5,
+                      backgroundColor: context.inputFillColor,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+
+    // Shared audit log widget — uses Column instead of ListView so it works
+    // correctly inside IntrinsicHeight on the desktop two-column layout.
+    Widget auditCard = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Trilha de Auditoria Recente (RF10)',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.primaryTextColor),
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Log de Auditoria Recente (RF10)
-          Text(
-            'Trilha de Auditoria Recente (RF10)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
-          ),
-          const SizedBox(height: 10),
-
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.borderColor),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _auditLogs.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: context.borderColor),
-              itemBuilder: (context, index) {
-                final log = _auditLogs[index];
-                return ListTile(
+          ..._auditLogs.asMap().entries.map((entry) {
+            final index = entry.key;
+            final log = entry.value;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (index > 0) Divider(height: 1, color: context.borderColor),
+                ListTile(
                   dense: true,
                   leading: Container(
                     padding: const EdgeInsets.all(6),
@@ -364,10 +355,99 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                     'Usuário: ${log['user_name']} · ${log['created_at'].toString().substring(11, 16)}',
                     style: TextStyle(fontSize: 10, color: context.secondaryTextColor),
                   ),
-                );
-              },
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+
+    if (isDesktop) {
+      // ── Desktop layout ────────────────────────────────────────────────────
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Indicadores de Qualidade e Operação (RF11)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                ),
+                const SizedBox(height: 14),
+
+                // 4 KPIs in a single horizontal row
+                IntrinsicHeight(
+                  child: Row(
+                    children: kpiCards
+                        .map((card) => Expanded(child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              child: card,
+                            )))
+                        .toList(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Two-column: categories left, audit log right
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: categoriesCard),
+                      const SizedBox(width: 16),
+                      Expanded(flex: 7, child: auditCard),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
           ),
+        ),
+      );
+    }
+
+    // ── Mobile/tablet layout (original) ─────────────────────────────────────
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Indicadores de Qualidade e Operação (RF11)',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
+          const SizedBox(height: 12),
+
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.6,
+            children: kpiCards,
+          ),
+          const SizedBox(height: 24),
+
+          Text(
+            'Distribuição por Categorias da Base',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
+          const SizedBox(height: 10),
+          categoriesCard,
+          const SizedBox(height: 24),
+
+          Text(
+            'Trilha de Auditoria Recente (RF10)',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+          ),
+          const SizedBox(height: 10),
+          auditCard,
           const SizedBox(height: 32),
         ],
       ),
@@ -375,26 +455,98 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
   }
 
   Widget _buildEscalationsTab() {
-    if (_escalations.isEmpty) {
-      return Center(
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: context.isDesktop ? 860 : double.infinity),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.done_all_rounded, size: 48, color: Colors.green.shade300),
-            const SizedBox(height: 12),
-            Text('Nenhum caso pendente na fila humana do ASA.', style: TextStyle(color: context.secondaryTextColor)),
-          ],
-        ),
-      );
-    }
+            // Barra de Filtro Operacional vs Histórico Geral
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.isDesktop ? 32 : 16,
+                vertical: 12,
+              ),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.today_rounded, size: 16),
+                        SizedBox(width: 6),
+                        Text('Fila de Hoje (Operacional)'),
+                      ],
+                    ),
+                    selected: _showTodayOnly,
+                    selectedColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontWeight: _showTodayOnly ? FontWeight.bold : FontWeight.normal,
+                      color: _showTodayOnly ? AppColors.primaryGreen : context.secondaryTextColor,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _showTodayOnly = true);
+                        _loadDashboardData();
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.history_rounded, size: 16),
+                        SizedBox(width: 6),
+                        Text('Histórico Completo'),
+                      ],
+                    ),
+                    selected: !_showTodayOnly,
+                    selectedColor: AppColors.primaryGreen.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontWeight: !_showTodayOnly ? FontWeight.bold : FontWeight.normal,
+                      color: !_showTodayOnly ? AppColors.primaryGreen : context.secondaryTextColor,
+                    ),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _showTodayOnly = false);
+                        _loadDashboardData();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _escalations.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final esc = _escalations[index];
-        final isResolved = esc['status'] == 'RESOLVIDO';
+            if (_escalations.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.done_all_rounded, size: 48, color: Colors.green.shade300),
+                      const SizedBox(height: 12),
+                      Text(
+                        _showTodayOnly
+                            ? 'Nenhum atendimento na fila de hoje até o momento.'
+                            : 'Nenhum chamado registrado no histórico.',
+                        style: TextStyle(color: context.secondaryTextColor),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.isDesktop ? 32 : 16,
+                    vertical: 8,
+                  ),
+                  itemCount: _escalations.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final esc = _escalations[index];
+            final isResolved = esc['status'] == 'RESOLVIDO';
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -438,17 +590,90 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
               ),
               const SizedBox(height: 10),
 
-              Text(
-                'Estudante: ${esc['student_name']} (RA: ${esc['student_ra'] ?? "N/A"})',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      esc['ticket_number'] ?? '#${esc['id']}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryGreen,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${esc['student_name']} (RA: ${esc['student_ra'] ?? "N/A"})',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${esc['student_course'] ?? "Curso"} • ${esc['student_semester'] ?? 1}º Semestre • ${esc['student_campus'] ?? "Campus Liberdade"}',
+                          style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (esc['modality'] == 'PRESENCIAL')
+                          ? Colors.purple.withValues(alpha: 0.15)
+                          : Colors.blue.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      (esc['modality'] == 'PRESENCIAL') ? '🏢 Presencial (Mesa)' : '💬 Chat Online',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: (esc['modality'] == 'PRESENCIAL') ? Colors.purple : Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, color: context.primaryTextColor)),
+              const SizedBox(height: 10),
+              if (esc['student_email'] != null) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.mail_outline_rounded, size: 14, color: AppColors.primaryGreen),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Email: ${esc['student_email']}',
+                      style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
+              Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
               if (esc['user_notes'] != null) ...[
                 const SizedBox(height: 4),
-                Text(
-                  'Dúvida: "${esc['user_notes']}"',
-                  style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.secondaryTextColor),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.inputFillColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Relato do Aluno: "${esc['user_notes']}"',
+                    style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.primaryTextColor),
+                  ),
                 ),
               ],
 
@@ -467,25 +692,91 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
                 ),
               ],
 
-              if (!isResolved) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
-                    label: const Text('Atender / Resolver Caso', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: () => _resolveEscalation(esc['id']),
+              if (isResolved && esc['service_rating'] != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Avaliação do Aluno: ${esc['service_rating']} / 5 estrelas',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                      ),
+                      if (esc['service_rating_comment'] != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '"${esc['service_rating_comment']}"',
+                            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.primaryTextColor),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
+
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF005C4B),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      icon: const Icon(Icons.chat_rounded, size: 16),
+                      label: const Text('💬 Chat do Atendente', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      onPressed: () async {
+                        final escModel = EscalationModel.fromJson(esc);
+                        final res = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AttendantChatScreen(escalation: escModel),
+                          ),
+                        );
+                        if (res == true) {
+                          _loadDashboardData();
+                        }
+                      },
+                    ),
+                  ),
+                  if (!isResolved) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryGreen,
+                          side: const BorderSide(color: AppColors.primaryGreen),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                        label: const Text('Encerrar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () => _resolveEscalation(esc['id']),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         );
       },
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -611,10 +902,16 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
       return matchesQuery && matchesCat;
     }).toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: context.isDesktop ? 1000 : double.infinity),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.isDesktop ? 32 : 16,
+            vertical: 16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Banner de Governança RAG (RF16)
           Container(
@@ -809,6 +1106,8 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
               },
             ),
         ],
+          ),
+        ),
       ),
     );
   }
