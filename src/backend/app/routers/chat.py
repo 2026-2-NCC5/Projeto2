@@ -105,38 +105,14 @@ def send_message(
     db.commit()
 
     # Verifica se a conversa está sob atendimento humano ativo (PENDENTE ou EM_ATENDIMENTO)
-    active_escalation = db.query(EscalationCase).filter(
-        EscalationCase.conversation_id == conversation.id,
-        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
-    ).first()
-
-    if active_escalation:
-        # Silencia o bot de IA: o aluno está conversando diretamente com o atendente humano!
-        conversation.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        return ChatMessageResponse(
-            id=user_msg.id,
-            conversation_id=conversation.id,
-            sender=MessageSender.USER,
-            content=user_msg.content,
-            image_url=user_msg.image_url,
-            is_abstained=False,
-            confidence_score=1.0,
-            threshold_used=0.0,
-            retrieved_chunks=[],
-            source_citation="Atendimento Humano ASA",
-            suggested_action=None,
-            agent_version="humano",
-            is_helpful=None,
-            feedback_comment=None,
-            created_at=user_msg.created_at,
-        )
-
-    # Verifica se a conversa está sob atendimento humano ativo (PENDENTE ou EM_ATENDIMENTO)
-    active_escalation = db.query(EscalationCase).filter(
-        EscalationCase.conversation_id == conversation.id,
-        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
-    ).first()
+    active_escalation = None
+    try:
+        active_escalation = db.query(EscalationCase).filter(
+            EscalationCase.conversation_id == conversation.id,
+            EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
+        ).first()
+    except Exception:
+        db.rollback()
 
     if active_escalation:
         # Silencia o bot de IA: o aluno está conversando diretamente com o atendente humano!
@@ -239,15 +215,24 @@ def list_user_conversations(
     """
     Lista o histórico de conversas do estudante autenticado (Tela de Conversas do Figma).
     """
-    conversations = (
-        db.query(Conversation)
-        .filter(
-            Conversation.user_id == current_user.id,
-            Conversation.is_deleted_by_user.is_(False),
+    try:
+        conversations = (
+            db.query(Conversation)
+            .filter(
+                Conversation.user_id == current_user.id,
+                Conversation.is_deleted_by_user.is_(False),
+            )
+            .order_by(Conversation.updated_at.desc())
+            .all()
         )
-        .order_by(Conversation.updated_at.desc())
-        .all()
-    )
+    except Exception:
+        db.rollback()
+        conversations = (
+            db.query(Conversation)
+            .filter(Conversation.user_id == current_user.id)
+            .order_by(Conversation.updated_at.desc())
+            .all()
+        )
 
     results = []
     for conv in conversations:
