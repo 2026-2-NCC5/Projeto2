@@ -177,7 +177,7 @@ async def serve_app():
     return FileResponse(index_file)
 
 
-@app.get("/health", tags=["Sistema"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["Sistema"])
 async def health_check():
     """Healthcheck simples para monitoramento e docker healthcheck."""
     return {
@@ -190,7 +190,7 @@ async def health_check():
     }
 
 
-@app.get("/", tags=["Sistema"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["Sistema"])
 async def root():
     """Redireciona para o aplicativo interativo ou documentação."""
     index_file = os.path.join(static_dir, "index.html")
