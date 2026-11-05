@@ -586,10 +586,14 @@ def get_my_active_escalation(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    case = db.query(EscalationCase).filter(
-        EscalationCase.student_id == current_user.id,
-        EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
-    ).first()
+    try:
+        case = db.query(EscalationCase).filter(
+            EscalationCase.student_id == current_user.id,
+            EscalationCase.status.in_([EscalationStatus.PENDENTE, EscalationStatus.EM_ATENDIMENTO]),
+        ).first()
+    except Exception:
+        db.rollback()
+        return None
     if not case:
         return None
 

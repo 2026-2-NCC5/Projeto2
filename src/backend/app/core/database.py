@@ -34,19 +34,28 @@ def init_db() -> None:
     import app.models  # Garante o registro de todos os modelos
     Base.metadata.create_all(bind=engine)
 
-    from sqlalchemy import text
+    from sqlalchemy import text, inspect
     migrations = [
-        "ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR(500);",
-        "ALTER TABLE conversations ADD COLUMN is_deleted_by_user BOOLEAN DEFAULT 0;",
-        "ALTER TABLE escalation_cases ADD COLUMN ticket_number VARCHAR(20);",
-        "ALTER TABLE escalation_cases ADD COLUMN modality VARCHAR(20) DEFAULT 'ONLINE';",
-        "ALTER TABLE escalation_cases ADD COLUMN service_rating INTEGER;",
-        "ALTER TABLE escalation_cases ADD COLUMN service_rating_comment TEXT;",
+        ("chat_messages", "image_url", "ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR(500);"),
+        ("conversations", "is_deleted_by_user", "ALTER TABLE conversations ADD COLUMN is_deleted_by_user BOOLEAN DEFAULT FALSE;"),
+        ("escalation_cases", "ticket_number", "ALTER TABLE escalation_cases ADD COLUMN ticket_number VARCHAR(20);"),
+        ("escalation_cases", "modality", "ALTER TABLE escalation_cases ADD COLUMN modality VARCHAR(20) DEFAULT 'ONLINE';"),
+        ("escalation_cases", "service_rating", "ALTER TABLE escalation_cases ADD COLUMN service_rating INTEGER;"),
+        ("escalation_cases", "service_rating_comment", "ALTER TABLE escalation_cases ADD COLUMN service_rating_comment TEXT;"),
     ]
-    with engine.connect() as conn:
-        for sql in migrations:
+
+    for table_name, col_name, sql in migrations:
+        try:
+            with engine.connect() as conn:
+                inspector = inspect(conn)
+                existing_cols = [c["name"] for c in inspector.get_columns(table_name)]
+                if col_name not in existing_cols:
+                    conn.execute(text(sql))
+                    conn.commit()
+        except Exception:
             try:
-                conn.execute(text(sql))
-                conn.commit()
+                with engine.connect() as conn:
+                    conn.execute(text(sql))
+                    conn.commit()
             except Exception:
                 pass
