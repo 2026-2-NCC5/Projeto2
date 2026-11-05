@@ -1,0 +1,120 @@
+{
+  "annotations": {"list": []},
+  "description": "ASA Connect+ — Monitoramento de API (Entrega 2 FECAP)",
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "title": "Visão Geral",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0}]},
+          "mappings": [{"options": {"0": {"text": "OFFLINE"}, "1": {"text": "ONLINE"}}, "type": "value"}]
+        }
+      },
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 1},
+      "id": 1,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "API Status",
+      "type": "stat",
+      "targets": [{"expr": "up{job=\"asaconnect_api\"}", "legendFormat": "API"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "gridPos": {"h": 4, "w": 5, "x": 4, "y": 1},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "Requisições/s (última 5m)",
+      "type": "stat",
+      "targets": [{"expr": "sum(rate(http_requests_total{job=\"asaconnect_api\"}[5m]))", "legendFormat": "req/s"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 2}]}
+        }
+      },
+      "gridPos": {"h": 4, "w": 5, "x": 9, "y": 1},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "Latência P95",
+      "type": "stat",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"asaconnect_api\"}[5m])) by (le))", "legendFormat": "P95"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05}]}
+        }
+      },
+      "gridPos": {"h": 4, "w": 5, "x": 14, "y": 1},
+      "id": 4,
+      "options": {"colorMode": "background", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "Taxa de Erros 5xx",
+      "type": "stat",
+      "targets": [{"expr": "sum(rate(http_requests_total{job=\"asaconnect_api\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"asaconnect_api\"}[5m]))", "legendFormat": "Error Rate"}]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
+      "id": 101,
+      "title": "Throughput & Latência",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {"unit": "reqps", "custom": {"lineWidth": 2, "fillOpacity": 10}},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "2xx"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
+          {"matcher": {"id": "byName", "options": "4xx"}, "properties": [{"id": "color", "value": {"fixedColor": "yellow", "mode": "fixed"}}]},
+          {"matcher": {"id": "byName", "options": "5xx"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]}
+        ]
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "id": 5,
+      "title": "Requisições por Status HTTP",
+      "type": "timeseries",
+      "targets": [
+        {"expr": "sum(rate(http_requests_total{job=\"asaconnect_api\",status=~\"2..\"}[1m]))", "legendFormat": "2xx"},
+        {"expr": "sum(rate(http_requests_total{job=\"asaconnect_api\",status=~\"4..\"}[1m]))", "legendFormat": "4xx"},
+        {"expr": "sum(rate(http_requests_total{job=\"asaconnect_api\",status=~\"5..\"}[1m]))", "legendFormat": "5xx"}
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s", "custom": {"lineWidth": 2, "fillOpacity": 10}}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "id": 6,
+      "title": "Latência por Percentil (P50 / P95 / P99)",
+      "type": "timeseries",
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"asaconnect_api\"}[5m])) by (le))", "legendFormat": "P50"},
+        {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"asaconnect_api\"}[5m])) by (le))", "legendFormat": "P95"},
+        {"expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"asaconnect_api\"}[5m])) by (le))", "legendFormat": "P99"}
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["asaconnect", "fecap", "entrega2"],
+  "time": {"from": "now-1h", "to": "now"},
+  "timezone": "America/Sao_Paulo",
+  "title": "ASA Connect+ — Monitoramento API",
+  "uid": "asaconnect-api-v2",
+  "version": 1
+}
+

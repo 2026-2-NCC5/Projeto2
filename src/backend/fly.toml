@@ -1,6 +1,5 @@
-# fly.toml app configuration file for ASA Connect+
-# Primary region: gru (São Paulo, Brasil - ultra low latency)
-# Auto stop machines: off (nunca hiberna)
+# fly.toml — ASA Connect+ (Entrega 2)
+# Região: gru (São Paulo) | Auto-stop: off | 1 GB RAM
 
 app = "asa-connect-api"
 primary_region = "gru"
@@ -8,28 +7,35 @@ primary_region = "gru"
 [build]
 
 [env]
-  APP_NAME = "ASA Connect API"
-  API_V1_PREFIX = "/api/v1"
-  ENVIRONMENT = "production"
-  LOG_LEVEL = "INFO"
-  JWT_ALGORITHM = "HS256"
+  APP_NAME                     = "ASA Connect API"
+  API_V1_PREFIX                = "/api/v1"
+  ENVIRONMENT                  = "production"
+  LOG_LEVEL                    = "INFO"
+  JWT_ALGORITHM                = "HS256"
   JWT_ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
-  RAG_CONFIDENCE_THRESHOLD = "0.48"
-  RAG_MAX_CHUNKS = "3"
-  RAG_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-  KNOWLEDGE_BASE_DIR = "/app/knowledge_base"
-  DATABASE_URL = "sqlite:////app/asaconnect.db"
-  LLM_MODEL = "gemini-2.5-flash"
+  RAG_CONFIDENCE_THRESHOLD     = "0.48"
+  RAG_MAX_CHUNKS               = "3"
+  RAG_EMBEDDING_MODEL          = "all-MiniLM-L6-v2"
+  KNOWLEDGE_BASE_DIR           = "/app/knowledge_base"
+  LLM_MODEL                    = "gemini-2.5-flash"
+  ENABLE_METRICS               = "true"
+  # Segredos: JWT_SECRET_KEY e GEMINI_API_KEY são configurados via
+  #   fly secrets set JWT_SECRET_KEY=... GEMINI_API_KEY=...
 
 [http_service]
-  internal_port = 8080
-  force_https = true
-  auto_stop_machines = "off"
+  internal_port       = 8080
+  force_https         = true
+  auto_stop_machines  = "off"
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
+  processes           = ["app"]
+
+  [http_service.concurrency]
+    type       = "connections"
+    hard_limit = 100
+    soft_limit = 80
 
 [[vm]]
-  memory = "1gb"
+  memory   = "1gb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus     = 1

@@ -14,18 +14,25 @@ from app.core.security import get_password_hash
 from app.agent.retriever import retriever
 from app.routers import auth, profile, documents, chat, feedback, escalations, dashboard
 
+# Observabilidade — Métricas Prometheus (Entrega 2)
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+    PROMETHEUS_ENABLED = True
+except ImportError:
+    PROMETHEUS_ENABLED = False
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Ciclo de vida da aplicação FastAPI: startup e shutdown."""
     logger.info("Iniciando ASA Connect API...", extra={"extra_data": {"version": settings.APP_VERSION}})
-    
+
     # Inicializa tabelas do banco
     init_db()
-    
+
     db = SessionLocal()
     try:
-        # 1. Seed e garantia dos perfis institucionais (Aluno, Responsável, Professor, Colaborador, Atendente, Admin)
+        # 1. Seed e garantia dos perfis institucionais
         default_seed_users = [
             User(
                 ra_or_email="123456",
@@ -138,8 +145,8 @@ async def log_requests(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 2)
-    
-    if not request.url.path.startswith(("/docs", "/openapi.json", "/redoc", "/health", "/static")):
+
+    if not request.url.path.startswith(("/docs", "/openapi.json", "/redoc", "/health", "/static", "/metrics")):
         logger.info(
             "HTTP Request processada",
             extra={
@@ -164,6 +171,19 @@ app.include_router(feedback.router, prefix=settings.API_V1_PREFIX)
 app.include_router(escalations.router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard.router, prefix=settings.API_V1_PREFIX)
 
+# Observabilidade — Expõe /metrics no formato Prometheus (Entrega 2)
+if PROMETHEUS_ENABLED:
+    Instrumentator(
+        should_group_status_codes=False,
+        should_ignore_untemplated=True,
+        should_respect_env_var=True,
+        should_instrument_requests_inprogress=True,
+        excluded_handlers=["/health", "/metrics"],
+        env_var_name="ENABLE_METRICS",
+        inprogress_name="http_requests_inprogress",
+        inprogress_labels=True,
+    ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+
 # Monta arquivos estáticos do aplicativo interativo
 static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 if os.path.exists(static_dir):
@@ -187,6 +207,7 @@ async def health_check():
         "environment": settings.ENVIRONMENT,
         "rag_docs_indexed": retriever.indexed_docs_count,
         "rag_chunks_indexed": len(retriever.chunks),
+        "metrics_enabled": PROMETHEUS_ENABLED,
     }
 
 
@@ -201,5 +222,6 @@ async def root():
         "docs": "/docs",
         "app": "/app",
         "health": "/health",
+        "metrics": "/metrics",
         "api_v1": settings.API_V1_PREFIX,
     }

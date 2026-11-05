@@ -1,0 +1,35 @@
+groups:
+  - name: asaconnect_api
+    rules:
+      - alert: APIDown
+        expr: up{job="asaconnect_api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ASA Connect API FORA DO AR"
+          description: "O serviço {{ $labels.instance }} não responde há mais de 1 minuto."
+
+      - alert: HighErrorRate
+        expr: >
+          (sum(rate(http_requests_total{job="asaconnect_api",status=~"5.."}[5m]))
+          / sum(rate(http_requests_total{job="asaconnect_api"}[5m]))) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taxa de erros 5xx acima de 5%"
+          description: "Taxa atual: {{ $value | humanizePercentage }}"
+
+      - alert: HighLatencyP95
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="asaconnect_api"}[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência P95 acima de 2s"
+          description: "P95 atual: {{ $value | humanizeDuration }}"
+

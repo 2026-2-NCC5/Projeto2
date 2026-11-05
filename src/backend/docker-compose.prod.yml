@@ -1,0 +1,189 @@
+version: '3.8'
+
+# =============================================================================
+# ASA Connect+ — Docker Compose PRODUÇÃO (Entrega 2)
+# Serviços: API FastAPI + PostgreSQL + Prometheus + Grafana + Backup
+# Uso: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 — Banco de Dados Principal
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: asaconnect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-asaconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-asaconnect_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+      - postgres_backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-asaconnect} -d ${POSTGRES_DB:-asaconnect_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - asaconnect_net
+    # Porta não exposta externamente em produção (acesso apenas interno)
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ---------------------------------------------------------------------------
+  # API FastAPI — ASA Connect+
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: asaconnect-api:2.0.0
+    container_name: asaconnect_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-asaconnect}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-asaconnect_db}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: HS256
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+      RAG_CONFIDENCE_THRESHOLD: "0.48"
+      RAG_MAX_CHUNKS: "3"
+      RAG_EMBEDDING_MODEL: all-MiniLM-L6-v2
+      KNOWLEDGE_BASE_DIR: /app/knowledge_base
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      LLM_MODEL: gemini-2.5-flash
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+      ENABLE_METRICS: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./knowledge_base:/app/knowledge_base:ro
+      - api_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - asaconnect_net
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '1.0'
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — Coleta e Armazenamento de Métricas
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: asaconnect_prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - asaconnect_net
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Painel de Monitoramento Visual
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: asaconnect_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - asaconnect_net
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  # ---------------------------------------------------------------------------
+  # Backup — Executado sob demanda (profile: backup)
+  # Uso: docker compose -f docker-compose.prod.yml --profile backup run --rm backup
+  # ---------------------------------------------------------------------------
+  backup:
+    image: postgres:16-alpine
+    container_name: asaconnect_backup
+    restart: "no"
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:-asaconnect}
+      POSTGRES_DB: ${POSTGRES_DB:-asaconnect_db}
+    volumes:
+      - postgres_backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+    networks:
+      - asaconnect_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - backup
+
+# =============================================================================
+# Volumes Persistentes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  postgres_backups:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  api_logs:
+    driver: local
+
+# =============================================================================
+# Rede Interna Isolada
+# =============================================================================
+networks:
+  asaconnect_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
