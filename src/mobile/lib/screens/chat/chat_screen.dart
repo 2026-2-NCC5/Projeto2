@@ -657,7 +657,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(26),
                             border: Border.all(color: context.borderColor),
                           ),
                           child: Row(

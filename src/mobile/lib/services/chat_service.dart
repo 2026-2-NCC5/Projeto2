@@ -25,8 +25,17 @@ class ChatService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return ChatMessageModel.fromJson(data);
     } else {
-      final errorData = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(errorData['detail'] ?? 'Erro ao processar mensagem.');
+      dynamic errorData;
+      try {
+        errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      } catch (_) {}
+      final detail = (errorData is Map && errorData['detail'] != null)
+          ? errorData['detail']
+          : 'Erro ao processar mensagem.';
+      if (response.statusCode == 401) {
+        throw Exception('401 Unauthorized: ' + detail.toString());
+      }
+      throw Exception(detail.toString());
     }
   }
 

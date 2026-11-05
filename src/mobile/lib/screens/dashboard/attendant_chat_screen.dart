@@ -206,6 +206,166 @@ class _AttendantChatScreenState extends State<AttendantChatScreen> {
     }
   }
 
+  Widget _buildBriefingPill(String label, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
+      ),
+    );
+  }
+
+  Widget _buildHandoverBriefingCard() {
+    final studentName = _currentCase.studentName ?? 'Estudante';
+    final ra = _currentCase.studentRa ?? 'Sem RA';
+    final course = _currentCase.studentCourse ?? 'Geral';
+    final semester = _currentCase.studentSemester != null ? '${_currentCase.studentSemester}º Sem' : '1º Sem';
+    final notes = _currentCase.userNotes ?? _currentCase.reason;
+
+    String displayProblem = notes;
+    if (displayProblem.contains('[Diagnóstico IA]:')) {
+      displayProblem = displayProblem.replaceFirst('[Diagnóstico IA]:', '').trim();
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF02845E).withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.badge_rounded, color: Color(0xFF02845E), size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      studentName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildBriefingPill('RA: $ra', const Color(0xFF02845E), const Color(0xFFECFDF5)),
+                        _buildBriefingPill(course, const Color(0xFF6366F1), const Color(0xFFEEF2FF)),
+                        _buildBriefingPill(semester, const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded, color: Color(0xFF845EF2), size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'Problema Específico Identificado pelo ASA:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  displayProblem,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF334155),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () {
+                final firstName = studentName.split(' ').first;
+                _msgController.text = 'Olá, $firstName! Já revisei suas informações e o histórico da sua dúvida. Como posso te ajudar a resolver isso agora?';
+              },
+              borderRadius: BorderRadius.circular(100),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF005C4B).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.reply_rounded, color: Color(0xFF005C4B), size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      'Saudar com contexto pronto',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF005C4B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final studentName = _currentCase.studentName ?? 'Aluno';
@@ -301,26 +461,8 @@ class _AttendantChatScreenState extends State<AttendantChatScreen> {
       ),
       body: Column(
         children: [
-          // Banner de contexto do chamado
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: const Color(0xFFFFF9C4),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, size: 18, color: Color(0xFFF57F17)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Motivo: ${_currentCase.reason}${_currentCase.userNotes != null ? " • Dúvida: ${_currentCase.userNotes}" : ""}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF5D4037)),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Briefing Executivo do Estudante com Diagnóstico Inteligente
+          _buildHandoverBriefingCard(),
 
           // Lista de Mensagens estilo WhatsApp
           Expanded(

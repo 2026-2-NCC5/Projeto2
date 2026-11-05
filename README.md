@@ -60,7 +60,6 @@ Conforme os requisitos das disciplinas e Unidades Curriculares:
 📁 src
  ├── 📁 backend
  ├── 📁 mobile
- ├── 📁 web
  └── 📁 notebooks
 📄 .gitignore
 📄 README.md
@@ -117,15 +116,15 @@ docker compose up -d
 
 ---
 
-### 📱 3.2 Mobile (Android) — `src/mobile`
+### 📱 3.2 Mobile (Flutter) & Demonstração da PoC (APK)
 
-A aplicação mobile clássica é focada em dispositivos móveis (Android):
+A demonstração da aplicação mobile pode ser realizada de duas maneiras:
 
 1. **Instalação Direta via APK (Android):**
    * O aplicativo de Release compilado está disponível diretamente na raiz deste repositório: [**`ASA-Connect-Plus.apk`**](ASA-Connect-Plus.apk) *(54 MB)*.
-   * O APK já está conectado nativamente à API em nuvem, com suporte completo a Dark Mode e Tom Alvarista.
+   * O APK já está conectado nativamente à API em nuvem no Render (`https://projeto2-7gf7.onrender.com/api/v1`), com suporte completo a Dark Mode e Tom Alvarista.
 
-2. **Execução Local do Código-fonte Mobile:**
+2. **Execução Local do Código-fonte:**
    1. Em outro terminal, navegue até a pasta do mobile:
       ```bash
       cd src/mobile
@@ -134,39 +133,15 @@ A aplicação mobile clássica é focada em dispositivos móveis (Android):
       ```bash
       flutter pub get
       ```
-   3. Execute no emulador ou dispositivo conectado:
+   3. Execute o aplicativo no navegador (Google Chrome):
       ```bash
-      flutter run -d android
+      flutter run -d chrome --web-port=3000
       ```
+      > 📍 **App no Navegador:** [http://localhost:3000](http://localhost:3000)
 
 ---
 
-### 🌐 3.3 Web & Desktop — `src/web`
-
-A aplicação web e desktop possui interface otimizada para telas horizontais (barra lateral fixa **Sidebar**, seleção de perfis em grade e chat com tela dividida *split-view*):
-
-1. Em outro terminal, navegue até a pasta da web:
-   ```bash
-   cd src/web
-   ```
-2. Baixe as dependências do Flutter:
-   ```bash
-   flutter pub get
-   ```
-3. Execute no navegador (Google Chrome):
-   ```bash
-   flutter run -d chrome --web-port=3000
-   ```
-   > 📍 **Acesse no Navegador:** [http://localhost:3000](http://localhost:3000)
-
-*(Ou para rodar como executável desktop Windows)*:
-```bash
-flutter run -d windows
-```
-
----
-
-### 🔑 3.4 Credenciais de Teste para Avaliação
+### 🔑 3.3 Credenciais de Teste para Avaliação
 
 O banco de dados SQLite local é inicializado automaticamente com os seguintes usuários fictícios:
 

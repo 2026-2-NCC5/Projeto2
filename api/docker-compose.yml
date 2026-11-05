@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: asaconnect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-asaconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-asaconnect_secret_2025}
+      POSTGRES_DB: ${POSTGRES_DB:-asaconnect_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-asaconnect} -d ${POSTGRES_DB:-asaconnect_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: asaconnect_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-asaconnect}:${POSTGRES_PASSWORD:-asaconnect_secret_2025}@postgres:5432/${POSTGRES_DB:-asaconnect_db}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-fecap_asa_connect_secret_key_jwt_2025_prod}
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - RAG_CONFIDENCE_THRESHOLD=0.60
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - ./knowledge_base:/knowledge_base
+
+volumes:
+  postgres_data:

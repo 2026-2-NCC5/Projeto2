@@ -473,19 +473,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     alignment: Alignment.bottomRight,
                     children: [
                       Container(
-                        width: 80,
-                        height: 80,
-                        padding: const EdgeInsets.all(3),
+                        width: 82,
+                        height: 82,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: context.isDarkMode
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFE2E8F0),
                           border: Border.all(color: AppColors.headerGreen, width: 2.5),
                         ),
-                        child: ClipOval(
-                          child: Image.asset(
+                        child: Center(
+                          child: Icon(
                             user?.profileType == 'PROFESSOR'
-                                ? 'assets/images/persona_aluno.png'
-                                : 'assets/images/persona_aluna.png',
-                            fit: BoxFit.cover,
+                                ? Icons.menu_book_rounded
+                                : (user?.profileType == 'ATENDENTE_ASA' || user?.profileType == 'COLABORADOR'
+                                    ? Icons.support_agent_rounded
+                                    : Icons.person_rounded),
+                            size: 42,
+                            color: AppColors.headerGreen,
                           ),
                         ),
                       ),

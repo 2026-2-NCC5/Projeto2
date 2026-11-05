@@ -552,7 +552,14 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: context.cardColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
             border: Border.all(
               color: isResolved
                   ? context.borderColor
@@ -662,17 +669,43 @@ class _ManagerDashboardScreenState extends State<ManagerDashboardScreen> with Si
               ],
               Text('Motivo: ${esc['reason']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
               if (esc['user_notes'] != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: context.inputFillColor,
-                    borderRadius: BorderRadius.circular(8),
+                    color: esc['user_notes'].toString().contains('[Diagnóstico IA]:')
+                        ? (context.isDarkMode ? const Color(0xFF1E1B2E) : const Color(0xFFF5F3FF))
+                        : context.inputFillColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: esc['user_notes'].toString().contains('[Diagnóstico IA]:')
+                          ? const Color(0xFF845EF2).withOpacity(0.3)
+                          : context.borderColor,
+                    ),
                   ),
-                  child: Text(
-                    'Relato do Aluno: "${esc['user_notes']}"',
-                    style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: context.primaryTextColor),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (esc['user_notes'].toString().contains('[Diagnóstico IA]:'))
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            children: [
+                              Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.aiPurple),
+                              SizedBox(width: 4),
+                              Text(
+                                'Diagnóstico do Problema (IA):',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.aiPurple),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Text(
+                        esc['user_notes'].toString().replaceFirst('[Diagnóstico IA]:', '').trim(),
+                        style: TextStyle(fontSize: 11, color: context.primaryTextColor, height: 1.3),
+                      ),
+                    ],
                   ),
                 ),
               ],

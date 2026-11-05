@@ -30,14 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (widget.selectedProfile == 'PROFESSOR') {
       defaultId = 'prof.almeida@fecap.br';
-    } else if (widget.selectedProfile == 'ATENDENTE' || widget.selectedProfile == 'ATENDENTE_ASA') {
+    } else if (widget.selectedProfile == 'TIME_ASA' || widget.selectedProfile == 'ATENDENTE' || widget.selectedProfile == 'ATENDENTE_ASA' || widget.selectedProfile == 'COLABORADOR') {
       defaultId = 'atendente@fecap.br';
-    } else if (widget.selectedProfile == 'COLABORADOR') {
-      defaultId = 'colaborador@fecap.br';
-    } else if (widget.selectedProfile == 'ADMINISTRADOR') {
-      defaultId = 'admin@fecap.br';
-    } else if (widget.selectedProfile == 'RESPONSAVEL') {
-      defaultId = 'responsavel@fecap.br';
+    } else {
+      defaultId = '123456';
     }
 
     _identifierController = TextEditingController(text: defaultId);
@@ -66,6 +62,18 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const ProfileSelectionScreen()),
       );
     }
+  }
+
+  Widget _buildQuickLoginChip(String label, String id, String pwd, IconData icon) {
+    return ActionChip(
+      avatar: Icon(icon, size: 14, color: AppColors.headerGreen),
+      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.primaryTextColor)),
+      backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
+      side: BorderSide(color: context.borderColor),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+      onPressed: () => _fillCredentials(id, pwd),
+    );
   }
 
   void _showSupportDialog() {
@@ -356,46 +364,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
+                        spacing: 8,
+                        runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: [
-                          ActionChip(
-                            label: Text('Aluno 123456', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('123456', 'senha123'),
-                          ),
-                          ActionChip(
-                            label: Text('Responsável', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('responsavel@fecap.br', 'senha123'),
-                          ),
-                          ActionChip(
-                            label: Text('Prof. Almeida', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('prof.almeida@fecap.br', 'senha123'),
-                          ),
-                          ActionChip(
-                            label: Text('Colaborador', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('colaborador@fecap.br', 'senha123'),
-                          ),
-                          ActionChip(
-                            label: Text('Atendente ASA', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('atendente@fecap.br', 'senha123'),
-                          ),
-                          ActionChip(
-                            label: Text('Admin', style: TextStyle(fontSize: 10, color: context.primaryTextColor)),
-                            backgroundColor: context.isDarkMode ? AppDarkColors.surfaceInput : const Color(0xFFF1F5F9),
-                            side: BorderSide(color: context.borderColor),
-                            onPressed: () => _fillCredentials('admin@fecap.br', 'senha123'),
-                          ),
+                          _buildQuickLoginChip('Aluno', '123456', 'senha123', Icons.school_rounded),
+                          _buildQuickLoginChip('Professor', 'prof.almeida@fecap.br', 'senha123', Icons.menu_book_rounded),
+                          _buildQuickLoginChip('Time ASA', 'atendente@fecap.br', 'senha123', Icons.support_agent_rounded),
                         ],
                       ),
                       const SizedBox(height: 16),

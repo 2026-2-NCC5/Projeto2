@@ -19,7 +19,6 @@ class Conversation(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(200), default="Nova Conversa", nullable=False)
     is_deleted_by_user = Column(Boolean, default=False, nullable=False)
-    is_deleted_by_user = Column(Boolean, default=False, nullable=False)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
