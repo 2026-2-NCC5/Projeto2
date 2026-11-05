@@ -95,10 +95,10 @@ class AgentMessageBubble extends StatelessWidget {
                       ? (context.isDarkMode ? AppDarkColors.abstentionBg : AppColors.abstentionBg)
                       : (context.isDarkMode ? AppDarkColors.agentBubble : AppColors.surfaceCard)),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
               border: Border.all(
                 color: isAttendant
@@ -111,7 +111,7 @@ class AgentMessageBubble extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
+                  blurRadius: 14,
                   offset: const Offset(0, 2),
                 ),
               ],

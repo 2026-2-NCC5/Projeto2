@@ -139,10 +139,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    image: DecorationImage(
-                      image: AssetImage(avatarAsset ?? 'assets/images/persona_aluna.png'),
-                      fit: BoxFit.cover,
+                    color: Colors.white.withOpacity(0.18),
+                    border: Border.all(color: Colors.white.withOpacity(0.7), width: 1.5),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),

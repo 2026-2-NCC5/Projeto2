@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:asa_connect/core/constants.dart';
@@ -328,18 +329,161 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     );
   }
 
-  void _downloadFile(String filename) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
+  void _downloadFile(String filename) async {
+    final now = DateTime.now();
+    final authKey = 'FECAP-${now.year}-${now.millisecondsSinceEpoch.toRadixString(16).toUpperCase()}';
+    final dateStr = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} às ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    final htmlContent = """<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>$filename - FECAP Oficial</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #1e293b; background: #fff; }
+    .header { border-bottom: 3px solid #005A36; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .title { font-size: 20px; font-weight: bold; color: #005A36; }
+    .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .doc-title { text-align: center; font-size: 18px; font-weight: bold; margin: 30px 0 20px 0; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; }
+    .content-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px; background: #f8fafc; font-size: 13px; line-height: 1.8; }
+    .info-row { display: flex; margin-bottom: 6px; }
+    .info-label { font-weight: bold; width: 170px; color: #475569; }
+    .auth-box { border: 2px dashed #005A36; border-radius: 12px; padding: 14px; background: #f0fdf4; margin-top: 30px; }
+    .auth-title { font-size: 11px; font-weight: bold; color: #005A36; text-transform: uppercase; }
+    .auth-key { font-family: monospace; font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 4px; }
+    .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8; }
+    @media print {
+      .no-print { display: none; }
+      body { margin: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+    <button onclick="window.print()" style="background: #005A36; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">
+      Baixar como PDF / Imprimir Documento
+    </button>
+  </div>
+  <div class="header">
+    <div>
+      <div class="title">FECAP · FUNDAÇÃO ESCOLA DE COMÉRCIO ÁLVARES PENTEADO</div>
+      <div class="subtitle">Área do Sucesso Alvarista (ASA) · Secretaria Geral Acadêmica</div>
+    </div>
+  </div>
+
+  <div class="doc-title">$filename</div>
+
+  <div class="content-box">
+    <div class="info-row"><div class="info-label">Instituição:</div><div>Fundação Escola de Comércio Álvares Penteado - FECAP</div></div>
+    <div class="info-row"><div class="info-label">Campus:</div><div>Campus Liberdade - São Paulo/SP</div></div>
+    <div class="info-row"><div class="info-label">Estudante:</div><div>Lucas Alvarista Silva</div></div>
+    <div class="info-row"><div class="info-label">RA / Matrícula:</div><div>123456</div></div>
+    <div class="info-row"><div class="info-label">Curso:</div><div>Ciência da Computação</div></div>
+    <div class="info-row"><div class="info-label">Situação Cadastral:</div><div>Regularmente Matriculado (Ano Letivo 2026)</div></div>
+    <div class="info-row"><div class="info-label">Data de Emissão:</div><div>$dateStr</div></div>
+  </div>
+
+  <p style="font-size: 13px; line-height: 1.6; color: #334155;">
+    Declaramos, para os devidos fins de comprovação acadêmica, de estágio ou obtenção de benefícios estudantis, que o(a) aluno(a) acima identificado(a) encontra-se devidamente matriculado(a) e frequente nesta Instituição de Ensino Superior, cumprindo as exigências do Regimento Geral e Diretrizes Curriculares Nacionais.
+  </p>
+
+  <div class="auth-box">
+    <div class="auth-title">Autenticação Digital e Validade Jurídica (Portaria MEC 315/2018)</div>
+    <div class="auth-key">Código de Validação: $authKey</div>
+    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Este documento foi gerado pelo ASA Connect+ e possui validade jurídica nacional.</div>
+  </div>
+
+  <div class="footer">
+    Área do Sucesso Alvarista - ASA Connect+ · Av. da Liberdade, 532 - São Paulo/SP · asa@fecap.br
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 350);
+    };
+  </script>
+</body>
+</html>""";
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Download concluído: $filename salvo com sucesso.')),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Documento Pronto!',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+              ),
+            ),
           ],
         ),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'O documento "$filename" foi emitido com autenticação oficial FECAP.',
+              style: TextStyle(fontSize: 13, color: context.primaryTextColor),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.inputFillColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.borderColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CHAVE DE AUTENTICAÇÃO DIGITAL',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: context.secondaryTextColor),
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableText(
+                    authKey,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'monospace', color: AppColors.headerGreen),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Fechar', style: TextStyle(color: context.secondaryTextColor)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            icon: const Icon(Icons.download_rounded, size: 16),
+            label: const Text('Baixar / Salvar PDF', style: TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final uri = Uri.parse('data:text/html;charset=utf-8,' + Uri.encodeComponent(htmlContent));
+              try {
+                await launchUrl(uri);
+              } catch (_) {}
+            },
+          ),
+        ],
       ),
     );
   }

@@ -11,6 +11,7 @@ from app.models.user import User, ProfileType
 from app.models.chat import Conversation, ChatMessage, MessageSender
 from app.models.escalation import EscalationCase, EscalationStatus, EscalationPriority
 from app.models.audit import AuditLog
+from app.agent.synthesizer import generate_handover_summary
 from app.schemas.escalation import (
     EscalationCreateRequest,
     EscalationResolveRequest,
@@ -149,17 +150,61 @@ def create_escalation(
 
     ticket_number = generate_ticket_number(db, escalation_req.modality, escalation_req.priority)
 
+    # Recupera histórico recente de mensagens para síntese generativa do problema
+    conv_msgs = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.conversation_id == conversation.id)
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+    raw_msgs = [{"sender": m.sender.value if hasattr(m.sender, "value") else str(m.sender), "content": m.content} for m in conv_msgs]
+    student_info = {
+        "full_name": current_user.full_name,
+        "ra": current_user.ra,
+        "course": current_user.course,
+        "semester": current_user.semester,
+        "campus": current_user.campus,
+    }
+    ai_diagnosis = generate_handover_summary(raw_msgs, student_info)
+
+    combined_notes = (escalation_req.user_notes or "").strip()
+    if combined_notes:
+        final_notes = f"[Diagnóstico IA]: {ai_diagnosis}\n\n[Notas do Estudante]: {combined_notes}"
+    else:
+        final_notes = f"[Diagnóstico IA]: {ai_diagnosis}"
+
     new_case = EscalationCase(
         conversation_id=conversation.id,
         student_id=current_user.id,
         ticket_number=ticket_number,
         modality=escalation_req.modality,
         reason=escalation_req.reason,
-        user_notes=escalation_req.user_notes,
+        user_notes=final_notes,
         priority=escalation_req.priority,
         status=EscalationStatus.PENDENTE,
     )
     db.add(new_case)
+
+    # Mensagem contextual automática na timeline do chat informando o aluno sobre o briefing já enviado ao atendente
+    clean_summary = ai_diagnosis.replace("[Diagnóstico IA]:", "").strip()
+    handover_msg_text = (
+        f"🤝 **Transferência para Atendimento Humano Realizada**\n\n"
+        f"Olá, {current_user.full_name}! Seu atendimento foi transferido para a equipe do ASA.\n\n"
+        f"📋 **Ficha de Encaminhamento:**\n"
+        f"• **Aluno:** {current_user.full_name} (RA: {current_user.ra or 'N/A'})\n"
+        f"• **Curso:** {current_user.course or 'Geral'} ({current_user.semester or 1}º Semestre)\n"
+        f"• **Senha:** {ticket_number} ({escalation_req.modality})\n"
+        f"• **Problema Mapeado:** {clean_summary}\n\n"
+        f"O atendente já recebeu sua ficha completa e o histórico deste chat. "
+        f"Você **não precisará repetir suas explicações**! Em instantes nosso atendente falará com você."
+    )
+    sys_msg = ChatMessage(
+        conversation_id=conversation.id,
+        sender=MessageSender.ATTENDANT,
+        content=handover_msg_text,
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(sys_msg)
     db.commit()
     db.refresh(new_case)
 

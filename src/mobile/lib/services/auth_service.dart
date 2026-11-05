@@ -17,6 +17,7 @@ class AuthService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       final token = data['access_token'];
       await _client.setToken(token);
+      await _client.setSavedCredentials(raOrEmail, password);
       return UserModel.fromJson(data['user']);
     } else {
       final errorData = jsonDecode(utf8.decode(response.bodyBytes));
@@ -57,5 +58,6 @@ class AuthService {
 
   Future<void> logout() async {
     await _client.setToken(null);
+    await _client.setSavedCredentials(null, null);
   }
 }

@@ -1,0 +1,11 @@
+Olá! Estou continuando o desenvolvimento do projeto ASA Connect (repositório https://github.com/2026-2-NCC5/Projeto2.git, branch main).
+
+Contexto técnico:
+- O projeto oficial está em https://github.com/2026-2-NCC5/Projeto2.git
+- src/mobile: Aplicativo Flutter com design system institucional oficial (paleta #02845E, #845EF2, #FFDE34 e bordas 16px). Telas completas de Splash, Seleção de Perfil (carrossel limpo sem setas e sem botões inferiores), Login JWT, Home (4 abas), Serviços Acadêmicos, Documentos e Chat IA RAG.
+- src/backend: API FastAPI (Python 3.12) rodando em http://localhost:8000.
+- Último commit integrado na main: 4917e60.
+
+Objetivo nesta máquina:
+Gostaria de compilar e gerar o APK do aplicativo Flutter (src/mobile) e testar a comunicação com o backend.
+Por favor, verifique meu ambiente Flutter e Android SDK (flutter doctor), configure o endereço correto da API em lib/services/api_client.dart e me ajude a gerar o arquivo APK.

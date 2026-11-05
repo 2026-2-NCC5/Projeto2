@@ -39,12 +39,12 @@ def _generate_with_gemini(query: str, context: str, api_key: str, profile_type: 
     """Chama a API do Google Gemini via HTTP REST com fallback automático de modelos."""
     system_prompt = _get_system_prompt_for_profile(profile_type)
     models_to_try = [
-        getattr(settings, "LLM_MODEL", None) or "gemini-flash-lite-latest",
-        "gemini-flash-lite-latest",
-        "gemini-3.1-flash-lite",
+        getattr(settings, "LLM_MODEL", None) or "gemini-3.5-flash-lite",
+        "gemini-3.5-flash-lite",
+        "gemini-3.8-flash",
         "gemini-flash-latest",
-        "gemini-2.5-flash-lite",
-        "gemini-3.6-flash",
+        "gemini-pro-latest",
+        "gemini-2.5-pro",
     ]
     models_to_try = list(dict.fromkeys([m for m in models_to_try if m]))
 
@@ -68,7 +68,7 @@ def _generate_with_gemini(query: str, context: str, api_key: str, profile_type: 
     for model in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         try:
-            with httpx.Client(timeout=8.0) as client:
+            with httpx.Client(timeout=15.0) as client:
                 resp = client.post(url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -325,7 +325,7 @@ def synthesize_response(query: str, retrieved_chunks: List[Dict[str, Any]], prof
         return synthesize_local(query, [], profile_type=profile_type)
 
     context_parts = []
-    for i, r in enumerate(retrieved_chunks[:4]):
+    for i, r in enumerate(retrieved_chunks[:6]):
         c = r["chunk"]
         context_parts.append(
             f"--- Documento [{i+1}]: {c['document_title']} (Seção: {c['section']}) ---\n{clean_markdown_snippet(c['content'])}"
@@ -351,3 +351,85 @@ def synthesize_response(query: str, retrieved_chunks: List[Dict[str, Any]], prof
             return llm_out
 
     return synthesize_local(query, retrieved_chunks, profile_type=profile_type)
+
+
+def generate_handover_summary(
+    conversation_messages: List[Dict[str, Any]],
+    student_info: Dict[str, Any],
+) -> str:
+    """
+    Gera um briefing executivo inteligente para o atendente humano do ASA.
+    Sintetiza em 2 a 3 frases o problema específico do estudante com base no histórico do chat,
+    para que o atendente humano já saiba a demanda sem que o aluno tenha que explicar tudo de novo.
+    """
+    student_name = student_info.get("full_name") or "Estudante"
+    ra = student_info.get("ra") or "N/A"
+    course = student_info.get("course") or "Curso não informado"
+    semester = student_info.get("semester") or 1
+
+    if not conversation_messages:
+        return f"Estudante {student_name} (RA: {ra}, {course}) solicitou atendimento humano no ASA sem histórico prévio de mensagens no chatbot."
+
+    dialogue_lines = []
+    for msg in conversation_messages[-8:]:
+        sender_val = msg.get("sender")
+        sender_label = "Aluno" if sender_val in ["USER", "user"] else "Bot ASA"
+        content = (msg.get("content") or "").strip()
+        if content:
+            dialogue_lines.append(f"{sender_label}: {content[:350]}")
+    dialogue_str = "\n".join(dialogue_lines)
+
+    gemini_key = getattr(settings, "GEMINI_API_KEY", None) or os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        prompt = (
+            f"Você é o assistente interno do ASA Connect+ da FECAP.\n"
+            f"O aluno {student_name} (RA: {ra}, Curso: {course}, {semester}º Semestre) acabou de ser transferido do bot para um atendente humano.\n\n"
+            f"HISTÓRICO DA CONVERSA:\n{dialogue_str}\n\n"
+            f"TAREFA:\n"
+            f"Gere um resumo executivo objetivo de 2 a 3 frases explicando para o atendente humano:\n"
+            f"1. O problema específico que o aluno está enfrentando;\n"
+            f"2. O que ele tentou fazer e qual orientação ou entrave o bot encontrou;\n"
+            f"3. O que precisa ser feito pelo atendente humano agora."
+        )
+
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": prompt}]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 300,
+            }
+        }
+
+        models_to_try = [
+            getattr(settings, "LLM_MODEL", None) or "gemini-3.5-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-flash-latest",
+        ]
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+            try:
+                with httpx.Client(timeout=10.0) as client:
+                    resp = client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        candidates = resp.json().get("candidates", [])
+                        if candidates and candidates[0].get("content", {}).get("parts"):
+                            summary_text = candidates[0]["content"]["parts"][0].get("text", "").strip()
+                            if len(summary_text) >= 40:
+                                return summary_text
+            except Exception:
+                continue
+
+    # Fallback local analítico
+    user_msgs = [m.get("content", "") for m in conversation_messages if m.get("sender") in ["USER", "user"]]
+    last_query = user_msgs[-1] if user_msgs else "Solicitação de atendimento geral"
+    return (
+        f"Estudante {student_name} (RA: {ra}, {course}) necessita de suporte com: \"{last_query[:160]}\". "
+        f"O aluno conversou com o bot de IA e aguarda atendimento especializado para prosseguir com sua solicitação."
+    )
+

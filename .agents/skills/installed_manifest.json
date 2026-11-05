@@ -1,0 +1,225 @@
+{
+  "count": 44,
+  "skills": {
+    "flutter-expert": {
+      "name": "flutter-expert",
+      "category": "development",
+      "description": "Master Flutter development with Dart 3, advanced widgets, and multi-platform deployment. Handles state management, animations, testing, and performance optimization for mobile, web, desktop, and embedded platforms. Use PROACTIVELY for Flutter architecture, UI implementation, or cross-platform features."
+    },
+    "mobile-developer": {
+      "name": "mobile-developer",
+      "category": "development",
+      "description": "Develop React Native, Flutter, or native mobile apps with modern architecture patterns. Masters cross-platform development, native integrations, offline sync, and app store optimization. Use PROACTIVELY for mobile features, cross-platform code, or app optimization."
+    },
+    "ui-ux-designer": {
+      "name": "ui-ux-designer",
+      "category": "development",
+      "description": "Create interface designs, wireframes, and design systems. Masters user research, accessibility standards, and modern design tools. Specializes in design tokens, component libraries, and inclusive design. Use PROACTIVELY for design systems, user flows, or interface optimization."
+    },
+    "ui-visual-validator": {
+      "name": "ui-visual-validator",
+      "category": "development",
+      "description": "Rigorous visual validation expert specializing in UI testing, design system compliance, and accessibility verification. Masters screenshot analysis, visual regression testing, and component validation. Use PROACTIVELY to verify UI modifications have achieved their intended goals through comprehensive visual analysis."
+    },
+    "frontend-mobile-development-component-scaffold": {
+      "name": "frontend-mobile-development-component-scaffold",
+      "category": "development",
+      "description": "Scaffold React and React Native components with TypeScript, accessibility, styles, and tests. Use when building reusable UI components or establishing component structure."
+    },
+    "mobile-security-coder": {
+      "name": "mobile-security-coder",
+      "category": "security",
+      "description": "Expert in secure mobile coding practices specializing in input validation, WebView security, and mobile-specific security patterns. Use PROACTIVELY for mobile security implementations or mobile security code reviews."
+    },
+    "wcag-audit-patterns": {
+      "name": "wcag-audit-patterns",
+      "category": "testing",
+      "description": "Conduct WCAG 2.2 accessibility audits with automated testing, manual verification, and remediation guidance. Use when auditing websites for accessibility, fixing WCAG violations, or implementing accessible design patterns."
+    },
+    "accessibility-compliance-accessibility-audit": {
+      "name": "accessibility-compliance-accessibility-audit",
+      "category": "general",
+      "description": "You are an accessibility expert specializing in WCAG compliance, inclusive design, and assistive technology compatibility. Conduct audits, identify barriers, and provide remediation guidance."
+    },
+    "screen-reader-testing": {
+      "name": "screen-reader-testing",
+      "category": "testing",
+      "description": "Test web applications with screen readers including VoiceOver, NVDA, and JAWS. Use when validating screen reader compatibility, debugging accessibility issues, or ensuring assistive technology support."
+    },
+    "fastapi-pro": {
+      "name": "fastapi-pro",
+      "category": "development",
+      "description": "Build high-performance async APIs with FastAPI, SQLAlchemy 2.0, and Pydantic V2. Master microservices, WebSockets, and modern Python async patterns. Use PROACTIVELY for FastAPI development, async optimization, or API architecture."
+    },
+    "python-pro": {
+      "name": "python-pro",
+      "category": "development",
+      "description": "Master Python 3.12+ with modern features, async programming, performance optimization, and production-ready practices. Expert in the latest Python ecosystem including uv, ruff, pydantic, and FastAPI. Use PROACTIVELY for Python development, optimization, or advanced Python patterns."
+    },
+    "async-python-patterns": {
+      "name": "async-python-patterns",
+      "category": "development",
+      "description": "Master Python asyncio, concurrent programming, and async/await patterns for high-performance applications. Use when building async APIs, concurrent systems, or I/O-bound applications requiring non-blocking operations."
+    },
+    "uv-package-manager": {
+      "name": "uv-package-manager",
+      "category": "development",
+      "description": "Master the uv package manager for fast Python dependency management, virtual environments, and modern Python project workflows. Use when setting up Python projects, managing dependencies, or optimizing Python development workflows with uv."
+    },
+    "backend-architect": {
+      "name": "backend-architect",
+      "category": "development",
+      "description": "Expert backend architect specializing in scalable API design, microservices architecture, and distributed systems. Masters REST/GraphQL/gRPC APIs, event-driven architectures, service mesh patterns, and modern backend frameworks. Handles service boundary definition, inter-service communication, resilience patterns, and observability. Use PROACTIVELY when creating new backend services or APIs."
+    },
+    "backend-security-coder": {
+      "name": "backend-security-coder",
+      "category": "security",
+      "description": "Expert in secure backend coding practices specializing in input validation, authentication, and API security. Use PROACTIVELY for backend security implementations or security code reviews."
+    },
+    "auth-implementation-patterns": {
+      "name": "auth-implementation-patterns",
+      "category": "security",
+      "description": "Master authentication and authorization patterns including JWT, OAuth2, session management, and RBAC to build secure, scalable access control systems. Use when implementing auth systems, securing APIs, or debugging security issues."
+    },
+    "api-design-principles": {
+      "name": "api-design-principles",
+      "category": "development",
+      "description": "Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers. Use when designing new APIs, reviewing API specifications, or establishing API design standards."
+    },
+    "openapi-spec-generation": {
+      "name": "openapi-spec-generation",
+      "category": "development",
+      "description": "Generate and maintain OpenAPI 3.1 specifications from code, design-first specs, and validation patterns. Use when creating API documentation, generating SDKs, or ensuring API contract compliance."
+    },
+    "api-testing-observability-api-mock": {
+      "name": "api-testing-observability-api-mock",
+      "category": "infrastructure",
+      "description": "You are an API mocking expert specializing in realistic mock services for development, testing, and demos. Design mocks that simulate real API behavior and enable parallel development."
+    },
+    "database-architect": {
+      "name": "database-architect",
+      "category": "data-ai",
+      "description": "Expert database architect specializing in data layer design from scratch, technology selection, schema modeling, and scalable database architectures. Masters SQL/NoSQL/TimeSeries database selection, normalization strategies, migration planning, and performance-first design. Handles both greenfield architectures and re-architecture of existing systems. Use PROACTIVELY for database architecture, technology selection, or data modeling decisions."
+    },
+    "database-optimizer": {
+      "name": "database-optimizer",
+      "category": "data-ai",
+      "description": "Expert database optimizer specializing in modern performance tuning, query optimization, and scalable architectures. Masters advanced indexing, N+1 resolution, multi-tier caching, partitioning strategies, and cloud database optimization. Handles complex query analysis, migration strategies, and performance monitoring. Use PROACTIVELY for database optimization, performance issues, or scalability challenges."
+    },
+    "database-admin": {
+      "name": "database-admin",
+      "category": "data-ai",
+      "description": "Expert database administrator specializing in modern cloud databases, automation, and reliability engineering. Masters AWS/Azure/GCP database services, Infrastructure as Code, high availability, disaster recovery, performance optimization, and compliance. Handles multi-cloud strategies, container databases, and cost optimization. Use PROACTIVELY for database architecture, operations, or reliability engineering."
+    },
+    "database-migrations-sql-migrations": {
+      "name": "database-migrations-sql-migrations",
+      "category": "data-ai",
+      "description": "SQL database migrations with zero-downtime strategies for PostgreSQL, MySQL, SQL Server"
+    },
+    "postgresql": {
+      "name": "postgresql",
+      "category": "data-ai",
+      "description": "Design a PostgreSQL-specific schema. Covers best-practices, data types, indexing, constraints, performance patterns, and advanced features"
+    },
+    "sql-pro": {
+      "name": "sql-pro",
+      "category": "data-ai",
+      "description": "Master modern SQL with cloud-native databases, OLTP/OLAP optimization, and advanced query techniques. Expert in performance tuning, data modeling, and hybrid analytical systems. Use PROACTIVELY for database optimization or complex analysis."
+    },
+    "rag-implementation": {
+      "name": "rag-implementation",
+      "category": "data-ai",
+      "description": "Build Retrieval-Augmented Generation (RAG) systems for LLM applications with vector databases and semantic search. Use when implementing knowledge-grounded AI, building document Q&A systems, or integrating LLMs with external knowledge bases."
+    },
+    "vector-database-engineer": {
+      "name": "vector-database-engineer",
+      "category": "data-ai",
+      "description": "Design vector storage, indexing, and semantic retrieval with Pinecone, Weaviate, Qdrant, Milvus, or pgvector. Use when implementing RAG, similarity search, or recommendation systems."
+    },
+    "vector-index-tuning": {
+      "name": "vector-index-tuning",
+      "category": "data-ai",
+      "description": "Optimize vector index performance for latency, recall, and memory. Use when tuning HNSW parameters, selecting quantization strategies, or scaling vector search infrastructure."
+    },
+    "embedding-strategies": {
+      "name": "embedding-strategies",
+      "category": "data-ai",
+      "description": "Select and optimize embedding models for semantic search and RAG applications. Use when choosing embedding models, implementing chunking strategies, or optimizing embedding quality for specific domains."
+    },
+    "prompt-engineering-patterns": {
+      "name": "prompt-engineering-patterns",
+      "category": "data-ai",
+      "description": "Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability in production. Use when optimizing prompts, improving LLM outputs, or designing production prompt templates."
+    },
+    "llm-application-dev-ai-assistant": {
+      "name": "llm-application-dev-ai-assistant",
+      "category": "data-ai",
+      "description": "Design conversational assistants with context management, response generation, and LLM integration. Use when building chatbots or planning assistant application architecture."
+    },
+    "deployment-engineer": {
+      "name": "deployment-engineer",
+      "category": "infrastructure",
+      "description": "Expert deployment engineer specializing in modern CI/CD pipelines, GitOps workflows, and advanced deployment automation. Masters GitHub Actions, ArgoCD/Flux, progressive delivery, container security, and platform engineering. Handles zero-downtime deployments, security scanning, and developer experience optimization. Use PROACTIVELY for CI/CD design, GitOps implementation, or deployment automation."
+    },
+    "cloud-architect": {
+      "name": "cloud-architect",
+      "category": "infrastructure",
+      "description": "Expert cloud architect specializing in AWS/Azure/GCP multi-cloud infrastructure design, advanced IaC (Terraform/OpenTofu/CDK), FinOps cost optimization, and modern architectural patterns. Masters serverless, microservices, security, compliance, and disaster recovery. Use PROACTIVELY for cloud architecture, cost optimization, migration planning, or multi-cloud strategies."
+    },
+    "cicd-automation-workflow-automate": {
+      "name": "cicd-automation-workflow-automate",
+      "category": "infrastructure",
+      "description": "You are a workflow automation expert specializing in creating efficient CI/CD pipelines, GitHub Actions workflows, and automated development processes. Design automation that reduces manual work, improves consistency, and accelerates delivery while maintaining quality and security."
+    },
+    "unit-testing-test-generate": {
+      "name": "unit-testing-test-generate",
+      "category": "testing",
+      "description": "Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus."
+    },
+    "tdd-orchestrator": {
+      "name": "tdd-orchestrator",
+      "category": "testing",
+      "description": "Master TDD orchestrator specializing in red-green-refactor discipline, multi-agent workflow coordination, and comprehensive test-driven development practices. Enforces TDD best practices across teams with AI-assisted testing and modern frameworks. Use PROACTIVELY for TDD implementation and governance."
+    },
+    "code-reviewer": {
+      "name": "code-reviewer",
+      "category": "development",
+      "description": "Elite code review expert specializing in modern AI-powered code analysis, security vulnerabilities, performance optimization, and production reliability. Masters static analysis tools, security scanning, and configuration review with 2024/2025 best practices. Use PROACTIVELY for code quality assurance."
+    },
+    "code-refactoring-refactor-clean": {
+      "name": "code-refactoring-refactor-clean",
+      "category": "development",
+      "description": "You are a code refactoring expert specializing in clean code principles, SOLID design patterns, and modern software engineering best practices. Analyze and refactor the provided code to improve its quality, maintainability, and performance."
+    },
+    "debugging-strategies": {
+      "name": "debugging-strategies",
+      "category": "development",
+      "description": "Master systematic debugging techniques, profiling tools, and root cause analysis to efficiently track down bugs across any codebase or technology stack. Use when investigating bugs, performance issues, or unexpected behavior."
+    },
+    "startup-analyst": {
+      "name": "startup-analyst",
+      "category": "business",
+      "description": "Expert startup business analyst specializing in market sizing, financial modeling, competitive analysis, and strategic planning for early-stage companies. Use PROACTIVELY when the user asks about market opportunity, TAM/SAM/SOM, financial projections, unit economics, competitive landscape, team planning, startup metrics, or business strategy for pre-seed through Series A startups."
+    },
+    "startup-financial-modeling": {
+      "name": "startup-financial-modeling",
+      "category": "business",
+      "description": "This skill should be used when the user asks to \"create financial projections\", \"build a financial model\", \"forecast revenue\", \"calculate burn rate\", \"estimate runway\", \"model cash flow\", or requests 3-5 year financial planning for a startup."
+    },
+    "business-analyst": {
+      "name": "business-analyst",
+      "category": "business",
+      "description": "Master modern business analysis with AI-powered analytics, real-time dashboards, and data-driven insights. Build comprehensive KPI frameworks, predictive models, and strategic recommendations. Use PROACTIVELY for business intelligence or strategic analysis."
+    },
+    "startup-metrics-framework": {
+      "name": "startup-metrics-framework",
+      "category": "business",
+      "description": "This skill should be used when the user asks about \"key startup metrics\", \"SaaS metrics\", \"CAC and LTV\", \"unit economics\", \"burn multiple\", \"rule of 40\", \"marketplace metrics\", or requests guidance on tracking and optimizing business performance metrics."
+    },
+    "antigravity-skills-manager": {
+      "name": "antigravity-skills-manager",
+      "category": "workflow",
+      "description": "Searches, installs, updates, and lists skills from the Antigravity Skill Vault. Use when choosing or managing workspace or global skills through the npm CLI."
+    }
+  }
+}

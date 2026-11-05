@@ -1,3 +1,4 @@
+import re
 from typing import Dict, Any, List, Optional
 from app.agent.retriever import retriever
 from app.agent.abstention import should_abstain, load_rag_config
@@ -18,6 +19,50 @@ class RAGPipeline:
         """
         Processa uma pergunta do estudante e gera a resposta fundamentada com rastreabilidade total.
         """
+        # 0. Interceptador de Saudações e Mensagens de Acolhimento
+        q_clean = query.strip().lower()
+        q_words = re.sub(r"[^\w\s]", "", q_clean).split()
+        greetings = {"ola", "olá", "oi", "oie", "opa", "salve", "fala", "hello", "hi", "hey"}
+        service_keywords = [
+            "matricula", "rematricula", "carteirinha", "estagio", "estágio", "boleto",
+            "atestado", "trancamento", "transferencia", "transferência", "dp", "prova",
+            "nota", "frequencia", "frequência", "passe", "sptrans", "emtu", "diploma",
+            "historico", "histórico", "grade", "mensalidade", "acordo", "desconto", "bolsa"
+        ]
+        has_service_kw = any(kw in q_clean for kw in service_keywords)
+        is_pure_greeting = (
+            (len(q_words) <= 3 and any(w in greetings for w in q_words) and not has_service_kw)
+            or q_clean in [
+                "tudo bem", "tudo bem?", "como vai", "como vai?", "e ai", "e aí",
+                "boa tarde", "bom dia", "boa noite", "ajuda", "socorro",
+                "quem é você", "quem e voce", "como você pode me ajudar", "o que você faz", "como funciona"
+            ]
+        )
+
+        if is_pure_greeting:
+            prof = (profile_type or "ALUNO").upper()
+            greeting_msg = (
+                "Olá! Que alegria falar com você! Sou o assistente virtual oficial do **ASA Connect+** (Área do Sucesso Alvarista da FECAP).\n\n"
+                "Estou pronto para te ajudar com procedimentos e informações oficiais sobre:\n"
+                "• **Rematrícula e Matrícula**\n"
+                "• **Emissão de Carteirinha Estudantil**\n"
+                "• **Atestados e Declarações Acadêmicas**\n"
+                "• **Estágio e Convênios (TCE)**\n"
+                "• **Boletos, Mensalidades e Acordos Financeiros**\n"
+                "• **Transferências, Trancamentos e Requerimentos**\n\n"
+                "Como posso te ajudar hoje? Envie sua dúvida ou solicitação!"
+            )
+            return {
+                "content": greeting_msg,
+                "is_abstained": False,
+                "confidence_score": 1.0,
+                "threshold_used": settings.RAG_CONFIDENCE_THRESHOLD,
+                "retrieved_chunks": [],
+                "source_citation": "Guia Oficial de Serviços da FECAP · ASA Connect+",
+                "suggested_action": "Digite sua dúvida acadêmica, financeira ou sobre procedimentos no Portal.",
+                "agent_version": self.agent_version,
+            }
+
         # 1. Recuperação Vetorial
         retrieved_results = retriever.retrieve(query, top_k=top_k)
         

@@ -124,13 +124,37 @@ class ChatProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isSending = false;
+      final errStr = e.toString().toLowerCase();
+      final isAuthError = errStr.contains('401') || errStr.contains('unauthorized') || errStr.contains('token') || errStr.contains('credenciais');
+      final isNetworkError = errStr.contains('socket') ||
+          errStr.contains('connection') ||
+          errStr.contains('failed host lookup') ||
+          errStr.contains('clientexception') ||
+          errStr.contains('network') ||
+          errStr.contains('refused') ||
+          errStr.contains('failed to fetch');
+
+      String errorMessage;
+      bool markAbstained = true;
+
+      if (isAuthError) {
+        errorMessage = 'Sua sessão expirou ou não está autenticada. Por favor, saia e faça login novamente com seu RA e senha para continuar.';
+        markAbstained = false;
+      } else if (isNetworkError) {
+        errorMessage = 'Não foi possível conectar ao servidor da API. Verifique a URL do backend nas configurações ou a sua conexão com a internet.';
+        markAbstained = false;
+      } else {
+        errorMessage = 'Desculpe, ocorreu uma instabilidade ao consultar a base oficial. Por favor tente novamente ou solicite atendimento humano.';
+        markAbstained = true;
+      }
+
       _messages.add(
         ChatMessageModel(
-          id: 'err_${DateTime.now().millisecondsSinceEpoch}',
+          id: 'err_',
           conversationId: _activeConversationId ?? '',
           sender: 'AGENT',
-          content: 'Desculpe, ocorreu uma instabilidade ao consultar a base oficial. Por favor tente novamente ou solicite atendimento humano.',
-          isAbstained: true,
+          content: errorMessage,
+          isAbstained: markAbstained,
           createdAt: DateTime.now(),
         ),
       );

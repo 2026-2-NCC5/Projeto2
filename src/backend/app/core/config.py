@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # RAG Configurações (RF04)
     RAG_CONFIDENCE_THRESHOLD: float = 0.48
-    RAG_MAX_CHUNKS: int = 3
+    RAG_MAX_CHUNKS: int = 6
     RAG_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     KNOWLEDGE_BASE_DIR: str = (
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base"))
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
-    LLM_MODEL: str = "gemini-2.0-flash"
+    LLM_MODEL: str = "gemini-3.5-flash-lite"
 
     # CORS
     CORS_ORIGINS: List[str] = ["*"]

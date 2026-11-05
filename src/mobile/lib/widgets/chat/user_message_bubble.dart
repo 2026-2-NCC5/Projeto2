@@ -78,15 +78,22 @@ class UserMessageBubble extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: context.isDarkMode ? AppDarkColors.userBubble : AppColors.primaryGreen,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(4),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(6),
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: (context.isDarkMode ? Colors.black : AppColors.primaryGreen).withOpacity(0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

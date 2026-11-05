@@ -43,23 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.user;
-    final isAttendantOrAdmin =
-        user?.profileType == 'ATENDENTE_ASA' || user?.profileType == 'ADMINISTRADOR';
+    final isTimeASA =
+        user?.profileType == 'ATENDENTE_ASA' || user?.profileType == 'ADMINISTRADOR' || user?.profileType == 'COLABORADOR';
     final isProfessor = user?.profileType == 'PROFESSOR';
-    final isResponsavel = user?.profileType == 'RESPONSAVEL';
-    final isColaborador = user?.profileType == 'COLABORADOR';
-
-    String avatarAsset = 'assets/images/persona_aluna.png';
-    if (isProfessor) {
-      avatarAsset = 'assets/images/persona_professor.png';
-    } else if (isResponsavel) {
-      avatarAsset = 'assets/images/persona_coordenadora.png';
-    } else if (isColaborador || isAttendantOrAdmin) {
-      avatarAsset = 'assets/images/persona_atendente.png';
-    }
 
     final List<Widget> tabs = [
-      _buildHomeContent(user, isAttendantOrAdmin, isProfessor, isResponsavel, isColaborador),
+      _buildHomeContent(user, isTimeASA, isProfessor),
       const ConversationsListScreen(isTab: true),
       const AcademicServicesScreen(isTab: true),
       const ProfileScreen(isTab: true),
@@ -78,24 +67,36 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: AppColors.headerGreen),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.headerGreen, Color(0xFF0D5238)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               accountName: Text(
-                user?.fullName ?? (isProfessor ? 'Prof. Rafael Rossetti' : (isResponsavel ? 'Responsável Financeiro' : (isColaborador ? 'Colaborador Alvarista' : 'Estudante Alvarista'))),
+                user?.fullName ?? (isProfessor ? 'Prof. Rafael Rossetti' : (isTimeASA ? 'Time ASA Atendimento' : 'Estudante Alvarista')),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              accountEmail: Text(user?.email ?? user?.ra ?? (isProfessor ? 'prof.almeida@fecap.br' : (isResponsavel ? 'responsavel@fecap.br' : (isColaborador ? 'colaborador@fecap.br' : 'aluno@fecap.br')))),
+              accountEmail: Text(user?.email ?? user?.ra ?? (isProfessor ? 'prof.almeida@fecap.br' : (isTimeASA ? 'atendente@fecap.br' : 'aluno@fecap.br'))),
               currentAccountPicture: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
                   border: Border.all(color: Colors.white, width: 2),
-                  image: DecorationImage(
-                    image: AssetImage(avatarAsset),
-                    fit: BoxFit.cover,
+                ),
+                child: Center(
+                  child: Icon(
+                    isProfessor
+                        ? Icons.menu_book_rounded
+                        : (isTimeASA ? Icons.support_agent_rounded : Icons.person_rounded),
+                    color: Colors.white,
+                    size: 38,
                   ),
                 ),
               ),
             ),
-            if (isAttendantOrAdmin)
+            if (isTimeASA)
               ListTile(
                 leading: const Icon(Icons.dashboard_rounded, color: AppColors.primaryGreen),
                 title: const Text('Painel Gerencial ASA', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -105,6 +106,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const ManagerDashboardScreen()),
                   );
+                },
+              ),
+            if (isProfessor)
+              ListTile(
+                leading: const Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706)),
+                title: const Text('Sinalização Preventiva (Alerta ASA)', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Encaminhar aluno em risco ao apoio do ASA'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showEarlyWarningModal(context);
                 },
               ),
             ListTile(
@@ -139,15 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.of(context).pop();
                 setState(() => _currentIndex = 3);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded, color: AppColors.error),
-              title: const Text('Sair', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await auth.logout();
               },
             ),
           ],
@@ -189,10 +191,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    image: DecorationImage(
-                      image: AssetImage(avatarAsset),
-                      fit: BoxFit.cover,
+                    color: Colors.white.withValues(alpha: 0.2),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.5),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isProfessor
+                          ? Icons.menu_book_rounded
+                          : (isTimeASA ? Icons.support_agent_rounded : Icons.person_rounded),
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),
@@ -269,12 +277,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHomeContent(
     user,
-    bool isAttendantOrAdmin,
+    bool isTimeASA,
     bool isProfessor,
-    bool isResponsavel,
-    bool isColaborador,
   ) {
-    final firstName = user?.fullName.split(' ').first ?? (isProfessor ? 'Professor' : (isResponsavel ? 'Responsável' : (isColaborador ? 'Colaborador' : 'Aluno')));
+    final firstName = user?.fullName.split(' ').first ?? (isProfessor ? 'Professor' : (isTimeASA ? 'Time ASA' : 'Aluno'));
 
     String greetingTitle = 'Olá, $firstName!';
     String greetingSubtitle = 'Como posso ajudar você hoje?';
@@ -285,20 +291,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (isProfessor) {
       greetingTitle = 'Olá, Prof. $firstName!';
       greetingSubtitle = 'Portal de Apoio Docente e Atendimento ASA';
-      searchHint = 'Pergunte sobre normas, diário, salas ou ASA...';
+      searchHint = 'Pergunte sobre normas, notas, diário ou ASA...';
       quickAccessTitle = 'ACESSO RÁPIDO DOCENTE';
       faqTitle = 'DÚVIDAS FREQUENTES DOCENTES';
-    } else if (isResponsavel) {
-      greetingTitle = 'Olá, $firstName!';
-      greetingSubtitle = 'Atendimento para Pais e Responsáveis';
-      searchHint = 'Pergunte sobre boletos, IRPF, matrículas ou normas...';
-      quickAccessTitle = 'SERVIÇOS PARA RESPONSÁVEIS';
-      faqTitle = 'DÚVIDAS FREQUENTES DE RESPONSÁVEIS';
-    } else if (isColaborador || isAttendantOrAdmin) {
+    } else if (isTimeASA) {
       greetingTitle = 'Olá, $firstName!';
       greetingSubtitle = 'Base Corporativa e Fluxos Institucionais ASA';
       searchHint = 'Consulte 311 manuais, normas, taxas ou protocolos...';
-      quickAccessTitle = 'ACESSO OPERACIONAL ASA';
+      quickAccessTitle = 'ACESSO OPERACIONAL TIME ASA';
       faqTitle = 'CONSULTAS OPERACIONAIS FREQUENTES';
     }
 
@@ -361,13 +361,93 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 20),
 
+          // Banner Exclusivo Docente: Sinalização Preventiva ASA
+          if (isProfessor) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2B1055), Color(0xFF591A8A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF591A8A).withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Sinalização Preventiva NAE / ASA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Identificou um aluno em risco de evasão ou vulnerabilidade? Notifique a equipe em 1 toque.',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 11,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF591A8A),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                      elevation: 0,
+                    ),
+                    onPressed: () => _showEarlyWarningModal(context),
+                    child: const Text('Sinalizar', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // 2. Campo de Prompt ASA Connect IA com Botão Roxo #845EF2
           Container(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
               color: context.cardColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(26),
               border: Border.all(color: context.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -408,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 38,
                     decoration: BoxDecoration(
                       color: AppColors.aiPurple,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
                       Icons.auto_awesome_rounded,
@@ -443,6 +523,24 @@ class _HomeScreenState extends State<HomeScreen> {
             children: isProfessor
                 ? [
                     _buildOfficialQuickCard(
+                      icon: Icons.warning_amber_rounded,
+                      iconColor: const Color(0xFFD97706),
+                      iconBgColor: const Color(0xFFD97706).withOpacity(0.12),
+                      title: 'SINALIZAÇÃO ASA',
+                      subtitle: 'Alerta Preventivo NAE',
+                      onTap: () => _showEarlyWarningModal(context),
+                    ),
+                    _buildOfficialQuickCard(
+                      icon: Icons.gavel_rounded,
+                      iconColor: AppColors.headerGreen,
+                      iconBgColor: AppColors.headerGreen.withOpacity(0.12),
+                      title: 'REGULAMENTOS & PEDP',
+                      subtitle: 'Avaliações e Extensão',
+                      onTap: () => _openChatWithQuery(
+                        'Quais são as principais normas de avaliação, arredondamento oficial de notas e projetos de extensão PEDP na FECAP?',
+                      ),
+                    ),
+                    _buildOfficialQuickCard(
                       icon: Icons.edit_note_rounded,
                       iconColor: AppColors.aiPurple,
                       iconBgColor: AppColors.aiPurple.withOpacity(0.12),
@@ -453,125 +551,62 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     _buildOfficialQuickCard(
-                      icon: Icons.gavel_rounded,
-                      iconColor: AppColors.headerGreen,
-                      iconBgColor: AppColors.headerGreen.withOpacity(0.12),
-                      title: 'REGIMENTO FECAP',
-                      subtitle: 'Normas Acadêmicas',
-                      onTap: () => _openChatWithQuery(
-                        'Quais são as principais normas do Regimento Geral da FECAP sobre avaliações e conduta acadêmica?',
-                      ),
-                    ),
-                    _buildOfficialQuickCard(
-                      icon: Icons.devices_other_rounded,
+                      icon: Icons.support_agent_rounded,
                       iconColor: const Color(0xFF02845E),
                       iconBgColor: AppColors.success.withOpacity(0.22),
-                      title: 'TI & SALAS',
-                      subtitle: 'Projetores e Labs',
+                      title: 'TIME ASA DOCENTE',
+                      subtitle: 'Suporte Pedagógico',
                       onTap: () => _openChatWithQuery(
-                        'Como solicitar apoio técnico de TI para projetores, salas de aula e agendamento de laboratórios na FECAP?',
-                      ),
-                    ),
-                    _buildOfficialQuickCard(
-                      icon: Icons.support_agent_rounded,
-                      iconColor: const Color(0xFFB45309),
-                      iconBgColor: AppColors.warningYellow.withOpacity(0.3),
-                      title: 'CONTATO ASA',
-                      subtitle: 'Central de Apoio',
-                      onTap: () => _openChatWithQuery(
-                        'Como o professor entra em contato com o ASA para encaminhar solicitações ou dúvidas de alunos?',
+                        'Como o professor entra em contato com o Time ASA para encaminhar solicitações ou dúvidas de alunos?',
                       ),
                     ),
                   ]
-                : isResponsavel
+                : isTimeASA
                     ? [
                         _buildOfficialQuickCard(
-                          icon: Icons.account_balance_wallet_outlined,
-                          iconColor: const Color(0xFFB45309),
-                          iconBgColor: AppColors.warningYellow.withOpacity(0.3),
-                          title: 'BOLETOS & TAXAS',
-                          subtitle: '2ª via e vencimento',
-                          onTap: () => _openChatWithQuery(
-                            'Como emitir a 2ª via do boleto de mensalidade da FECAP e consultar vencimentos?',
-                          ),
-                        ),
-                        _buildOfficialQuickCard(
-                          icon: Icons.receipt_long_rounded,
+                          icon: Icons.menu_book_rounded,
                           iconColor: AppColors.aiPurple,
                           iconBgColor: AppColors.aiPurple.withOpacity(0.12),
-                          title: 'INFORME IRPF',
-                          subtitle: 'Declaração Anual',
+                          title: '311 MANUAIS',
+                          subtitle: 'Regulamentos & Normas',
                           onTap: () => _openChatWithQuery(
-                            'Como obter a declaração de pagamentos ou informe financeiro para o Imposto de Renda na FECAP?',
+                            'Quais são as principais normas dos manuais institucionais e regulamentos acadêmicos da FECAP?',
                           ),
                         ),
                         _buildOfficialQuickCard(
-                          icon: Icons.assignment_outlined,
+                          icon: Icons.price_change_outlined,
+                          iconColor: const Color(0xFFB45309),
+                          iconBgColor: AppColors.warningYellow.withOpacity(0.3),
+                          title: 'TABELA DE TAXAS',
+                          subtitle: 'Valores e Prazos Úteis',
+                          onTap: () => _openChatWithQuery(
+                            'Qual é a tabela institucional de taxas e prazos em dias úteis para emissão de documentos na FECAP?',
+                          ),
+                        ),
+                        _buildOfficialQuickCard(
+                          icon: Icons.assignment_turned_in_outlined,
                           iconColor: AppColors.headerGreen,
                           iconBgColor: AppColors.headerGreen.withOpacity(0.12),
-                          title: 'MATRÍCULA FECAP',
-                          subtitle: 'Contratos e Prazos',
-                          onTap: () => _openChatWithQuery(
-                            'Quais são os prazos e procedimentos de renovação de matrícula e contrato para responsáveis na FECAP?',
+                          title: 'REQUERIMENTOS',
+                          subtitle: 'Fluxos de Protocolo',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const AcademicServicesScreen(filterCategory: 'Requerimentos'),
+                            ),
                           ),
                         ),
                         _buildOfficialQuickCard(
                           icon: Icons.headset_mic_rounded,
                           iconColor: const Color(0xFF02845E),
                           iconBgColor: AppColors.success.withOpacity(0.22),
-                          title: 'CENTRAL ASA',
-                          subtitle: 'Atendimento & Horários',
+                          title: 'FILA TIME ASA',
+                          subtitle: 'Transbordo e Escalação',
                           onTap: () => _openChatWithQuery(
-                            'Quais são os canais de atendimento telefônico, presencial e WhatsApp da Central ASA para responsáveis?',
+                            'Como funciona o processo de escalação para atendimento humano e acompanhamento de protocolos no ASA?',
                           ),
                         ),
                       ]
-                    : (isColaborador || isAttendantOrAdmin)
-                        ? [
-                            _buildOfficialQuickCard(
-                              icon: Icons.menu_book_rounded,
-                              iconColor: AppColors.aiPurple,
-                              iconBgColor: AppColors.aiPurple.withOpacity(0.12),
-                              title: '311 MANUAIS',
-                              subtitle: 'Regulamentos & Normas',
-                              onTap: () => _openChatWithQuery(
-                                'Quais são as principais normas dos manuais institucionais e regulamentos acadêmicos da FECAP?',
-                              ),
-                            ),
-                            _buildOfficialQuickCard(
-                              icon: Icons.price_change_outlined,
-                              iconColor: const Color(0xFFB45309),
-                              iconBgColor: AppColors.warningYellow.withOpacity(0.3),
-                              title: 'TABELA DE TAXAS',
-                              subtitle: 'Valores e Prazos Úteis',
-                              onTap: () => _openChatWithQuery(
-                                'Qual é a tabela institucional de taxas e prazos em dias úteis para emissão de documentos na FECAP?',
-                              ),
-                            ),
-                            _buildOfficialQuickCard(
-                              icon: Icons.assignment_turned_in_outlined,
-                              iconColor: AppColors.headerGreen,
-                              iconBgColor: AppColors.headerGreen.withOpacity(0.12),
-                              title: 'REQUERIMENTOS',
-                              subtitle: 'Fluxos de Protocolo',
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const AcademicServicesScreen(filterCategory: 'Requerimentos'),
-                                ),
-                              ),
-                            ),
-                            _buildOfficialQuickCard(
-                              icon: Icons.headset_mic_rounded,
-                              iconColor: const Color(0xFF02845E),
-                              iconBgColor: AppColors.success.withOpacity(0.22),
-                              title: 'FILA HUMANA ASA',
-                              subtitle: 'Transbordo e Escalação',
-                              onTap: () => _openChatWithQuery(
-                                'Como funciona o processo de escalação para atendimento humano e acompanhamento de protocolos no ASA?',
-                              ),
-                            ),
-                          ]
-                        : [
+                    : [
                             // 1. Documentos (Roxo #845EF2)
                             _buildOfficialQuickCard(
                               icon: Icons.description_outlined,
@@ -641,82 +676,56 @@ class _HomeScreenState extends State<HomeScreen> {
             children: isProfessor
                 ? [
                     _buildFaqQuestionCard(
-                      question: 'Qual o prazo final para lançamento de notas e faltas do semestre?',
+                      question: 'Como sinalizar um aluno com faltas consecutivas ou em risco de evasão?',
+                      badge: 'Alerta ASA',
+                      badgeBg: const Color(0xFFD97706).withOpacity(0.12),
+                      badgeColor: const Color(0xFFD97706),
+                      onTap: () => _showEarlyWarningModal(context),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFaqQuestionCard(
+                      question: 'Qual a regra oficial de arredondamento de notas e cálculo de médias?',
                       badge: 'Docente',
                       badgeBg: AppColors.headerGreen.withOpacity(0.1),
                       badgeColor: AppColors.headerGreen,
-                      onTap: () => _openChatWithQuery('Qual o prazo final para lançamento de notas e faltas do semestre no Portal do Professor?'),
+                      onTap: () => _openChatWithQuery('Qual a regra oficial de arredondamento de notas e cálculo de médias semestrais na FECAP?'),
                     ),
                     const SizedBox(height: 10),
                     _buildFaqQuestionCard(
-                      question: 'Como orientar pedidos de revisão de prova e abono de faltas?',
-                      badge: 'Acadêmico',
+                      question: 'Como orientar e acolher alunos com laudo de neurodivergência ou PCD?',
+                      badge: 'Acessibilidade NAE',
                       badgeBg: AppColors.aiPurple.withOpacity(0.1),
                       badgeColor: AppColors.aiPurple,
-                      onTap: () => _openChatWithQuery('Como o professor deve proceder em caso de revisão de prova solicitada pelo aluno?'),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildFaqQuestionCard(
-                      question: 'Como reservar laboratório de informática ou equipamento multimídia?',
-                      badge: 'Suporte TI',
-                      badgeBg: AppColors.warningYellow.withOpacity(0.25),
-                      badgeColor: const Color(0xFFB45309),
-                      onTap: () => _openChatWithQuery('Como solicitar reserva de laboratório de informática para aulas na FECAP?'),
+                      onTap: () => _openChatWithQuery('Quais são as diretrizes de acessibilidade e adaptação de provas para alunos do NAE na FECAP?'),
                     ),
                   ]
-                : isResponsavel
+                : isTimeASA
                     ? [
                         _buildFaqQuestionCard(
-                          question: 'Como emitir a 2ª via do boleto e consultar encargos de atraso?',
+                          question: 'Qual o prazo institucional para compensação bancária de boletos?',
                           badge: 'Financeiro',
                           badgeBg: AppColors.warningYellow.withOpacity(0.25),
                           badgeColor: const Color(0xFFB45309),
-                          onTap: () => _openChatWithQuery('Como emitir a 2ª via do boleto da mensalidade e quais as condições de pagamento na FECAP?'),
+                          onTap: () => _openChatWithQuery('Qual o prazo de compensação bancária e baixa de pagamentos no sistema financeiro da FECAP?'),
                         ),
                         const SizedBox(height: 10),
                         _buildFaqQuestionCard(
-                          question: 'Como solicitar o informe de quitação para declaração de IRPF?',
-                          badge: 'Tributário',
-                          badgeBg: AppColors.aiPurple.withOpacity(0.1),
-                          badgeColor: AppColors.aiPurple,
-                          onTap: () => _openChatWithQuery('Como solicitar a declaração anual de pagamentos para fins de declaração de Imposto de Renda na FECAP?'),
-                        ),
-                        const SizedBox(height: 10),
-                        _buildFaqQuestionCard(
-                          question: 'O responsável financeiro pode consultar notas e faltas?',
-                          badge: 'LGPD & Regras',
+                          question: 'Qual a taxa e o prazo para emissão de 2ª via de diploma?',
+                          badge: 'Secretaria',
                           badgeBg: AppColors.headerGreen.withOpacity(0.1),
                           badgeColor: AppColors.headerGreen,
-                          onTap: () => _openChatWithQuery('Quais informações acadêmicas e de frequência podem ser consultadas pelo responsável de acordo com as normas da FECAP?'),
+                          onTap: () => _openChatWithQuery('Qual é a taxa e o prazo institucional para emissão de 2ª via de diploma na FECAP?'),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildFaqQuestionCard(
+                          question: 'Como funciona o fluxo de briefing e encaminhamento do bot para a fila humana?',
+                          badge: 'Time ASA',
+                          badgeBg: AppColors.aiPurple.withOpacity(0.1),
+                          badgeColor: AppColors.aiPurple,
+                          onTap: () => _openChatWithQuery('Como funciona o fluxo de encaminhamento e transferência de chamados entre o ASA e as coordenações?'),
                         ),
                       ]
-                    : (isColaborador || isAttendantOrAdmin)
-                        ? [
-                            _buildFaqQuestionCard(
-                              question: 'Qual o prazo institucional para compensação bancária de boletos?',
-                              badge: 'Financeiro',
-                              badgeBg: AppColors.warningYellow.withOpacity(0.25),
-                              badgeColor: const Color(0xFFB45309),
-                              onTap: () => _openChatWithQuery('Qual o prazo de compensação bancária e baixa de pagamentos no sistema financeiro da FECAP?'),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildFaqQuestionCard(
-                              question: 'Qual a taxa e o prazo para emissão de 2ª via de diploma?',
-                              badge: 'Secretaria',
-                              badgeBg: AppColors.headerGreen.withOpacity(0.1),
-                              badgeColor: AppColors.headerGreen,
-                              onTap: () => _openChatWithQuery('Qual é a taxa e o prazo institucional para emissão de 2ª via de diploma na FECAP?'),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildFaqQuestionCard(
-                              question: 'Como transferir um chamado para a coordenação ou setor responsável?',
-                              badge: 'Atendimento ASA',
-                              badgeBg: AppColors.aiPurple.withOpacity(0.1),
-                              badgeColor: AppColors.aiPurple,
-                              onTap: () => _openChatWithQuery('Como funciona o fluxo de encaminhamento e transferência de chamados entre o ASA e as coordenações?'),
-                            ),
-                          ]
-                        : [
+                    : [
                             _buildFaqQuestionCard(
                               question: 'Como solicitar um atestado de matrícula?',
                               badge: 'Acadêmico',
@@ -759,15 +768,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: context.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         type: MaterialType.transparency,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(22),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -775,11 +791,11 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: iconBgColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, color: iconColor, size: 20),
                 ),
@@ -824,15 +840,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: context.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(context.isDarkMode ? 0.2 : 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Material(
         type: MaterialType.transparency,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
@@ -842,10 +865,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
                           color: badgeBg,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
                           badge,
@@ -872,6 +895,164 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Icon(Icons.chevron_right_rounded, color: AppColors.textLight, size: 20),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+  void _showEarlyWarningModal(BuildContext context) {
+    final raController = TextEditingController();
+    final obsController = TextEditingController();
+    String selectedReason = 'Frequência Crítica (Risco de Reprovação por Faltas)';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD97706).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sinalização Preventiva ASA / NAE',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryTextColor),
+                        ),
+                        Text(
+                          'Encaminhe apoio ao aluno antes da reprovação ou evasão.',
+                          style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text('RA DO ALUNO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.secondaryTextColor)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: raController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Ex: 123456',
+                  prefixIcon: const Icon(Icons.badge_outlined, size: 20),
+                  filled: true,
+                  fillColor: context.inputFillColor,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text('MOTIVO DA SINALIZAÇÃO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.secondaryTextColor)),
+              const SizedBox(height: 6),
+              DropdownButtonFormField<String>(
+                value: selectedReason,
+                isExpanded: true,
+                dropdownColor: context.cardColor,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: context.inputFillColor,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Frequência Crítica (Risco de Reprovação por Faltas)', child: Text('Frequência Crítica (Faltas consecutivas)', style: TextStyle(fontSize: 12))),
+                  DropdownMenuItem(value: 'Queda Abrupta no Rendimento Acadêmico', child: Text('Queda Abrupta no Rendimento / Desmotivação', style: TextStyle(fontSize: 12))),
+                  DropdownMenuItem(value: 'Apoio Psicológico / Acolhimento NAE', child: Text('Apoio Psicológico / Acolhimento NAE', style: TextStyle(fontSize: 12))),
+                  DropdownMenuItem(value: 'Adaptação de Acessibilidade / Neurodivergência', child: Text('Adaptação de Acessibilidade / Neurodivergência', style: TextStyle(fontSize: 12))),
+                ],
+                onChanged: (val) {
+                  if (val != null) setModalState(() => selectedReason = val);
+                },
+              ),
+              const SizedBox(height: 14),
+              Text('OBSERVAÇÕES DO PROFESSOR (OPCIONAL)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: context.secondaryTextColor)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: obsController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'Ex: O aluno faltou nas últimas 3 semanas e não respondeu...',
+                  filled: true,
+                  fillColor: context.inputFillColor,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  ),
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: const Text('Enviar Alerta ao Time ASA', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    final ra = raController.text.trim();
+                    if (ra.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Por favor, informe o RA do aluno.'), backgroundColor: AppColors.error),
+                      );
+                      return;
+                    }
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text('Alerta registrado! O Time ASA foi notificado para acolher o aluno RA ' + ra + '.')),
+                          ],
+                        ),
+                        backgroundColor: AppColors.success,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

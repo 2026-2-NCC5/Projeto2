@@ -35,9 +35,18 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
     from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR(500);",
+        "ALTER TABLE conversations ADD COLUMN is_deleted_by_user BOOLEAN DEFAULT 0;",
+        "ALTER TABLE escalation_cases ADD COLUMN ticket_number VARCHAR(20);",
+        "ALTER TABLE escalation_cases ADD COLUMN modality VARCHAR(20) DEFAULT 'ONLINE';",
+        "ALTER TABLE escalation_cases ADD COLUMN service_rating INTEGER;",
+        "ALTER TABLE escalation_cases ADD COLUMN service_rating_comment TEXT;",
+    ]
     with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN image_url VARCHAR(500);"))
-            conn.commit()
-        except Exception:
-            pass
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception:
+                pass

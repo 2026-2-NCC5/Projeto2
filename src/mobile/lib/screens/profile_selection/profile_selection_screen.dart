@@ -41,21 +41,14 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     ProfileItem(
       key: 'PROFESSOR',
       title: 'PROFESSOR',
-      description: 'CONSULTE INFORMAÇÕES E PROCEDIMENTOS PARA APOIAR SUA ATIVIDADE ACADÊMICA.',
+      description: 'CONSULTE NORMAS DOCENTES, SINALIZAÇÕES PREVENTIVAS E APOIO AO ALUNO.',
       imageAsset: 'assets/images/persona_professor.png',
       isFunctional: true,
     ),
     ProfileItem(
-      key: 'RESPONSAVEL',
-      title: 'RESPONSÁVEL',
-      description: 'ENCONTRE INFORMAÇÕES E ORIENTAÇÕES SOBRE OS SERVIÇOS DA INSTITUIÇÃO.',
-      imageAsset: 'assets/images/persona_atendente.png',
-      isFunctional: true,
-    ),
-    ProfileItem(
-      key: 'COLABORADOR',
-      title: 'COLABORADOR',
-      description: 'ACESSE INFORMAÇÕES E PROCEDIMENTOS INSTITUCIONAIS AUTORIZADOS.',
+      key: 'TIME_ASA',
+      title: 'TIME ASA',
+      description: 'ATENDIMENTO HUMANO, GESTÃO DE FILA E SUPORTE INSTITUCIONAL.',
       imageAsset: 'assets/images/persona_coordenadora.png',
       isFunctional: true,
     ),
@@ -84,15 +77,23 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
-            // Título Superior (igual ProfileSelectionScreen.tsx)
-            const Text(
-              'ESCOLHA SEU PERFIL',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2.5,
-                color: Colors.white,
+            const SizedBox(height: 28),
+            // Título Superior com tracking Apple
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'SELECIONE SEU ACESSO INSTITUCIONAL',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                  color: Colors.white,
+                ),
               ),
             ),
 
@@ -125,21 +126,21 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Imagem clicável direta sem nenhuma moldura
+                              // Imagem original da persona em tamanho de destaque
                               SizedBox(
-                                height: 250,
+                                height: 260,
                                 child: Image.asset(
                                   item.imageAsset,
                                   fit: BoxFit.contain,
                                 ),
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 24),
 
                               // Nome do Perfil
                               Text(
                                 item.title,
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 26,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
                                   color: Colors.white,
@@ -148,15 +149,54 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                               const SizedBox(height: 8),
 
                               // Descrição / Subtítulo
-                              Text(
-                                item.description,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.8,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  height: 1.4,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  item.description,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 22),
+
+                              // Botão Pílula Acessar
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(100),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Entrar como ${item.title}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.headerGreen,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 16,
+                                      color: AppColors.headerGreen,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -192,7 +232,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
           ],
         ),
       ),

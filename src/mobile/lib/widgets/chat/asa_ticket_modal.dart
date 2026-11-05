@@ -75,7 +75,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
     if (_isLoadingHours) {
       return Dialog(
         backgroundColor: context.cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: const Padding(
           padding: EdgeInsets.all(40),
           child: Column(
@@ -92,7 +92,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
 
     return Dialog(
       backgroundColor: context.cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 520),
         padding: const EdgeInsets.all(24),
@@ -155,7 +155,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
               color: isOpen
                   ? (isDark ? const Color(0xFF063A25) : const Color(0xFFDCFCE7))
                   : (isDark ? const Color(0xFF381A1A) : const Color(0xFFFEE2E2)),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isOpen
                     ? (isDark ? const Color(0xFF00E387) : const Color(0xFF86EFAC))
@@ -274,15 +274,15 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
               fillColor: context.inputFillColor,
               filled: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
                 borderSide: BorderSide(color: context.borderColor),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
                 borderSide: BorderSide(color: context.borderColor),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
                 borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
               ),
             ),
@@ -303,7 +303,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
                   backgroundColor: isOpen ? AppColors.primaryGreen : Colors.grey.shade400,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
                 icon: _isSubmitting
                     ? const SizedBox(
@@ -338,14 +338,14 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
 
     return InkWell(
       onTap: () => setState(() => _modality = value),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark ? AppColors.primaryGreen.withValues(alpha: 0.15) : AppColors.accentMint.withValues(alpha: 0.5))
               : context.inputFillColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.primaryGreen : context.borderColor,
             width: isSelected ? 2 : 1,
@@ -443,7 +443,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(28),
                 ),
                 child: Text(
                   isPresencial ? '🏢 Atendimento Presencial - Balcão ASA' : '💬 Atendimento Remoto - Chat ASA',
@@ -471,7 +471,7 @@ class _AsaTicketModalState extends State<AsaTicketModal> {
               backgroundColor: AppColors.primaryGreen,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Entendido / Acompanhar', style: TextStyle(fontWeight: FontWeight.bold)),
