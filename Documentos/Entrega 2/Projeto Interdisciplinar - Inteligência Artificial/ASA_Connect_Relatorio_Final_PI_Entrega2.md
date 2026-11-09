@@ -10,10 +10,10 @@
 ### Entrega 2 – Final (MVP Integrado, Nuvem e Avaliação)
 
 **Autores e Equipe:**
-- **Saulo Ribeiro Santos** – RA: 23014589 (*Especialista Mobile, Flutter & UI/UX*)
-- **Gustavo Henrique Da Silva Santos** – RA: 23015678 (*Especialista Backend, Banco de Dados & Testes*)
-- **Luan Rocha da Silva** – RA: 23012345 (*Arquiteto de Software, Especialista em IA, RAG & NLP*)
-- **Thiffany Morais Vieira da Silva** – RA: 23016789 (*Engenheira de Nuvem, DevOps, SRE & Observabilidade*)
+- **Saulo Ribeiro Santos** – RA: 24026911 (*Especialista Mobile, Flutter & UI/UX*)
+- **Gustavo Henrique Da Silva Santos** – RA: 24046874 (*Especialista Backend, Banco de Dados & Testes*)
+- **Luan Rocha da Silva** – RA: 24026633 (*Arquiteto de Software, Especialista em IA, RAG & NLP*)
+- **Thiffany Morais Vieira da Silva** – RA: 24026974 (*Engenheira de Nuvem, DevOps, SRE & Observabilidade*)
 
 **São Paulo – SP, Novembro de 2026**
 
